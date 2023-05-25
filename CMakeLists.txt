@@ -3,7 +3,7 @@ project(Blockchain)
 
 # GoogleTest requires at least C++11
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-Wall -g" )
+set(CMAKE_CXX_FLAGS "-Wall -g -lhttpserver" )
 # -g -fsanitize=address -Werror  -DNDEBUG -lboost_system -O3
 
 # include(FetchContent)
