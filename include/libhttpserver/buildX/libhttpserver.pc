@@ -1,0 +1,13 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libhttpserver
+Description: A C++ library for creating an embedded Rest HTTP server
+Version: 0.19.0
+Requires: libmicrohttpd >= 0.9.52
+Conflicts:
+Libs: -L${libdir} -lhttpserver
+Libs.private: -lmicrohttpd
+Cflags: -I${includedir} -I${includedir}/httpserver
