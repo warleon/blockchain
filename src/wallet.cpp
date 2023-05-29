@@ -52,6 +52,20 @@ void SHA256_file(const std::string &filename, unsigned char *hash) {
   SHA256_Final(hash, &sha256Context);
 }
 
+class Signature {
+  RSA *privateKey = nullptr;
+
+ public:
+  Signature(const std::string &privateKeyPath) {
+    FILE *privateKeyFile = fopen(privateKeyPath.c_str(), "rb");
+    if (!privateKeyFile)
+      throw std::runtime_error("can't open private key file");
+    privateKey =
+        PEM_read_RSAPrivateKey(privateKeyFile, nullptr, nullptr, nullptr);
+    if (!privateKey) throw std::runtime_error("can't read private key");
+  }
+};
+
 int main() {
   Key key(2048);
   key.toFiles("public_key.pem", "private_key.pem");

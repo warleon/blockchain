@@ -4,40 +4,11 @@
 
 #include <array>
 #include <cstdlib>
+#include <fstream>
 
-typedef size_t nonce_t;
-typedef unsigned char hash_t[SHA256_DIGEST_LENGTH];
-typedef hash_t sign_t;
-typedef size_t public_key_t;
+#include "transaction.hpp"
 
-typedef struct {
-  hash_t transaction_hash;        // a hash that identifies this transaction
-  sign_t key_hash_signature;      // a signature of the hash and public key made
-                                  // with the private key of the owner
-  public_key_t owner_public_key;  // the public key of the owner
-  hash_t data_hash;  // a hash that identifies the data to be claimed
-  // the claimed data will not be stored in the blockchain itself
-  // but store elsewhere
-} ownership_claim;
-typedef struct {
-  hash_t transaction_hash;    // a hash that identifies this transaction
-  sign_t key_hash_signature;  // a singnature from the previous owner that
-                              // certifies the transferece of ownership
-  public_key_t current_owner_public_key;
-  hash_t previous_transaction_hash;  // the hash that identifies the transaction
-                                     // on wich this transaction is based
-} ownership_transfer;
-
-typedef union {
-  ownership_claim claim;
-  ownership_transfer transfer;
-} transaction_union;
-enum transaction_enum { null, claim, transference };
-typedef struct {
-  transaction_enum type;
-  transaction_union transaction;
-} transaction_t;
-// size_t dummyvaltochecksizeinthelinter = sizeof(transaction_t);
+typedef int nonce_t;
 
 class Block {
   // the number of transactions is arbitrary, shall be change
@@ -48,7 +19,7 @@ class Block {
   hash_t previous_hash;
   nonce_t nonce = 0;
   size_t t_count = 0;
-  transaction_t transactions[t_max] = {};
+  transaction_t transactions[t_max]{};
 
  public:
   Block(const hash_t& previous_hash_) { update_previous_hash(previous_hash_); }
@@ -71,7 +42,7 @@ class Block {
   }
 
   // applies  one iteration of the POW mining proccess returns true if the
-  // POW is achieved flase otherwise
+  // POW goal is achieved flase otherwise
   bool try_mine() {
     // sets a random nonce
     srand((unsigned)time(NULL));
@@ -90,6 +61,6 @@ class Block {
     }
     return true;
   }
-  void write() {}
-  void read() {}
+  void write(std::ostream& os) { os.write((char*)this, sizeof(Block)); }
+  void read(std::istream& is) { is.read((char*)this, sizeof(Block)); }
 };
