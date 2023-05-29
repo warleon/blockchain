@@ -2,6 +2,12 @@
 	"files.associations": {
 		"stdexcept": "cpp",
 		"iostream": "cpp",
-		"exception": "cpp"
+		"exception": "cpp",
+		"*.tcc": "cpp",
+		"istream": "cpp",
+		"ostream": "cpp",
+		"streambuf": "cpp",
+		"functional": "cpp",
+		"regex": "cpp"
 	}
 }
