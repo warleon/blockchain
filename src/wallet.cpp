@@ -1,6 +1,8 @@
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
+#include <openssl/sha.h>
 
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 
@@ -37,6 +39,18 @@ class Key {
       throw std::runtime_error("cant write private key");
   }
 };
+
+void SHA256_file(const std::string &filename, unsigned char *hash) {
+  SHA256_CTX sha256Context;
+  std::ifstream file(filename, std::ifstream::binary);
+  if (!file) throw std::runtime_error("can't  open file");
+  SHA256_Init(&sha256Context);
+  char buffer[8192];  // 8kb buffer
+  while (file.read(buffer, sizeof(buffer))) {
+    SHA256_Update(&sha256Context, buffer, file.gcount());
+  }
+  SHA256_Final(hash, &sha256Context);
+}
 
 int main() {
   Key key(2048);
