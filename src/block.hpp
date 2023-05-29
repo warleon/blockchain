@@ -1,32 +1,26 @@
-#include <stdio.h>
+#pragma once
 
 #include "common_types.h"
 
-typedef size_t nonce_t;
-typedef size_t hash_t;
-typedef unsigned version_t;
-typedef unsigned difficulty_t;
-typedef char* buffer_t;
-
 typedef struct {
-  hash_t current_hash;
-  version_t version;
-  difficulty_t difficulty_target;
-  hash_t previous_hash;
-  nonce_t nonce;
-} block_metadata_t;
-
-typedef struct {
-  size_t byte_count;
+  hash_t transaction_hash;        // a hash that identifies this transaction
+  sign_t key_hash_signature;      // a signature of the hash and public key made
+                                  // with the private key of the owner
+  public_key_t owner_public_key;  // the public key of the owner
+  hash_t data_hash;  // a hash that identifies the data to be claimed
+  // |v| arbitrary data to be stored in the block
+  size_t data_size;
   buffer_t data;
-} content_t;
-
+} ownership_claim;
 typedef struct {
-  block_metadata_t metadata;
-  content_t content;
-} block_t;
+  hash_t transaction_hash;  // a hash that identifies this transaction
+  sign_t key_hash_signature;
+  public_key_t current_owner_public_key;
+  hash_t previus_transaction_hash;  // the hash that identifies the transaction
+                                    // on wich this transaction is based
+} ownership_transfer;
 
-// read to disk
-void read(block_t*, FILE*);
-// write to disk
-void write(block_t*, FILE*);
+typedef union {
+  ownership_claim claim;
+  ownership_transfer transfer;
+} transaction;
