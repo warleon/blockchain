@@ -56,7 +56,8 @@ class Signature {
   RSA *privateKey = nullptr;
 
  public:
-  Signature(const std::string &privateKeyPath) {
+  Signature(const std::string
+                &privateKeyPath) {  // todo terminar de hacer la firma :v
     FILE *privateKeyFile = fopen(privateKeyPath.c_str(), "rb");
     if (!privateKeyFile)
       throw std::runtime_error("can't open private key file");
