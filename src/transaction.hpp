@@ -5,6 +5,7 @@
 #include <openssl/sha.h>
 
 #include <fstream>
+#include <vector>
 
 typedef unsigned char hash_t[SHA256_DIGEST_LENGTH];
 typedef hash_t sign_t;
@@ -24,54 +25,99 @@ typedef struct {
 } transaction_t;
 // size_t dummyvaltochecksizeinthelinter = sizeof(transaction_t);
 
-void write(std::ostream& os, const transaction_t* tran) {
-  // check if the whole transaction can be written
+// Function to serialize the RSA key to a byte array
+std::vector<unsigned char> serializeRSAKey(public_key_t key) {
+  std::vector<unsigned char> serializedKey;
+
+  // Create a memory BIO to hold the serialized key
   BIO* bio = BIO_new(BIO_s_mem());
-  if (!bio) throw std::runtime_error("can't open bio buffer");
 
-  if (!PEM_write_bio_RSAPublicKey(bio, tran->transaction.owner)) {
-    BIO_free(bio);
-    throw std::runtime_error("can't write public key into buffer");
+  // Write the RSA key to the BIO in PEM format
+  if (PEM_write_bio_RSAPublicKey(bio, key) != 0) {
+    // Read the data from the BIO into a buffer
+    char* buffer;
+    long length = BIO_get_mem_data(bio, &buffer);
+
+    // Copy the data from the buffer to the serializedKey vector
+    serializedKey.assign(buffer, buffer + length);
   }
 
-  // write everything but the public key
-  os.write((char*)tran, sizeof(transaction_t) - sizeof(public_key_t));
-
-  // write public key
-  char* buffer;
-  long length = BIO_get_mem_data(bio, &buffer);
-  os.write(buffer, length);
+  // Free the BIO resources
   BIO_free(bio);
+
+  return serializedKey;
 }
 
-int streamReadFunction(void* istreamPtr, unsigned char* buffer, int size) {
-  std::istream& inputStream = *reinterpret_cast<std::istream*>(istreamPtr);
-  inputStream.read(reinterpret_cast<char*>(buffer), size);
-  return static_cast<int>(inputStream.gcount());
+// Function to deserialize the RSA key from a byte array
+public_key_t deserializeRSAKey(
+    const std::vector<unsigned char>& serializedKey) {
+  public_key_t key = nullptr;
+
+  // Create a memory BIO to hold the serialized key data
+  BIO* bio = BIO_new(BIO_s_mem());
+
+  // Write the serialized key data to the BIO
+  BIO_write(bio, serializedKey.data(), static_cast<int>(serializedKey.size()));
+
+  // Read the RSA key from the BIO
+  PEM_read_bio_RSAPublicKey(bio, &key, nullptr, nullptr);
+
+  // Free the BIO resources
+  BIO_free(bio);
+
+  return key;
 }
 
-void read(std::istream& is, const transaction_t* tran) {
-  // read everything but the public key
-  is.read((char*)tran, sizeof(transaction_t) - sizeof(public_key_t));
+// Function to write the transaction_t structure to a file
+void writeTransactionToFile(const transaction_t& transaction,
+                            const std::string& filename) {
+  std::ofstream outFile(filename, std::ios::binary);
 
-  BIO_METHOD* bioMethod = BIO_meth_new(BIO_TYPE_MEM, "Custom BIO");
-  if (!bioMethod) {
-    throw std::runtime_error("Failed to create BIO_METHOD");
-  }
-  BIO_METHOD* defaultBioMethod = BIO_meth_new(BIO_TYPE_MEM, "Custom BIO");
-  // Copy necessary fields from the default method
-  BIO_meth_set_write(bioMethod, BIO_meth_get_write(BIO_s_mem()));
-  BIO_meth_set_ctrl(bioMethod, BIO_meth_get_ctrl(BIO_s_mem()));
-  BIO_meth_set_create(bioMethod, BIO_meth_get_create(BIO_s_mem()));
-  BIO_meth_set_destroy(bioMethod, BIO_meth_get_destroy(BIO_s_mem()));
+  if (outFile) {
+    // Serialize the RSA key member
+    std::vector<unsigned char> serializedKey =
+        serializeRSAKey(transaction.transaction.owner);
 
-  BIO* bio = BIO_new(bioMethod);
-  if (!bio) {
-    BIO_meth_free(bioMethod);
-    throw std::runtime_error("Failed to create BIO");
+    // Write the size of the serialized key to the file
+    size_t keySize = serializedKey.size();
+    outFile.write(reinterpret_cast<const char*>(&keySize), sizeof(keySize));
+
+    // Write the serialized key data to the file
+    outFile.write(reinterpret_cast<const char*>(serializedKey.data()), keySize);
+
+    // Write the remaining transaction structure to the file
+    outFile.write(reinterpret_cast<const char*>(&transaction),
+                  sizeof(transaction));
+
+    outFile.close();
+    std::cout << "Transaction written to file successfully." << std::endl;
+  } else {
+    throw std::runtime_error("Error opening file for writing.");
   }
-  BIO_set_data(bio, &inputStream);
-  BIO_set_init(bio, 1);
-  BIO_set_mem_eof_return(bio, 0);
-  BIO_set_read(bio, streamReadFunction);
+}
+
+// Function to read the transaction_t structure from a file
+void readTransactionFromFile(transaction_t& transaction,
+                             const std::string& filename) {
+  std::ifstream inFile(filename, std::ios::binary);
+
+  if (inFile) {
+    // Read the size of the serialized key from the file
+    size_t keySize;
+    inFile.read(reinterpret_cast<char*>(&keySize), sizeof(keySize));
+
+    // Read the serialized key data from the file
+    std::vector<unsigned char> serializedKey(keySize);
+    inFile.read(reinterpret_cast<char*>(serializedKey.data()), keySize);
+
+    // Deserialize the RSA key member
+    transaction.transaction.owner = deserializeRSAKey(serializedKey);
+
+    // Read the remaining transaction structure from the file
+    inFile.read(reinterpret_cast<char*>(&transaction), sizeof(transaction));
+
+    inFile.close();
+  } else {
+    throw std::runtime_error("opening file for reading.");
+  }
 }
