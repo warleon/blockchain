@@ -70,54 +70,41 @@ public_key_t deserializeRSAKey(
 
 // Function to write the transaction_t structure to a file
 void writeTransactionToFile(const transaction_t& transaction,
-                            const std::string& filename) {
-  std::ofstream outFile(filename, std::ios::binary);
+                            std::ofstream& outFile) {
+  // Serialize the RSA key member
+  std::vector<unsigned char> serializedKey =
+      serializeRSAKey(transaction.transaction.owner);
 
-  if (outFile) {
-    // Serialize the RSA key member
-    std::vector<unsigned char> serializedKey =
-        serializeRSAKey(transaction.transaction.owner);
+  // Write the size of the serialized key to the file
+  size_t keySize = serializedKey.size();
+  outFile.write(reinterpret_cast<const char*>(&keySize), sizeof(keySize));
 
-    // Write the size of the serialized key to the file
-    size_t keySize = serializedKey.size();
-    outFile.write(reinterpret_cast<const char*>(&keySize), sizeof(keySize));
+  // Write the serialized key data to the file
+  outFile.write(reinterpret_cast<const char*>(serializedKey.data()), keySize);
 
-    // Write the serialized key data to the file
-    outFile.write(reinterpret_cast<const char*>(serializedKey.data()), keySize);
+  // Write the remaining transaction structure to the file
+  outFile.write(reinterpret_cast<const char*>(&transaction),
+                sizeof(transaction));
 
-    // Write the remaining transaction structure to the file
-    outFile.write(reinterpret_cast<const char*>(&transaction),
-                  sizeof(transaction));
-
-    outFile.close();
-    std::cout << "Transaction written to file successfully." << std::endl;
-  } else {
-    throw std::runtime_error("Error opening file for writing.");
-  }
+  outFile.close();
 }
 
 // Function to read the transaction_t structure from a file
 void readTransactionFromFile(transaction_t& transaction,
-                             const std::string& filename) {
-  std::ifstream inFile(filename, std::ios::binary);
+                             std::ifstream& inFile) {
+  // Read the size of the serialized key from the file
+  size_t keySize;
+  inFile.read(reinterpret_cast<char*>(&keySize), sizeof(keySize));
 
-  if (inFile) {
-    // Read the size of the serialized key from the file
-    size_t keySize;
-    inFile.read(reinterpret_cast<char*>(&keySize), sizeof(keySize));
+  // Read the serialized key data from the file
+  std::vector<unsigned char> serializedKey(keySize);
+  inFile.read(reinterpret_cast<char*>(serializedKey.data()), keySize);
 
-    // Read the serialized key data from the file
-    std::vector<unsigned char> serializedKey(keySize);
-    inFile.read(reinterpret_cast<char*>(serializedKey.data()), keySize);
+  // Deserialize the RSA key member
+  transaction.transaction.owner = deserializeRSAKey(serializedKey);
 
-    // Deserialize the RSA key member
-    transaction.transaction.owner = deserializeRSAKey(serializedKey);
+  // Read the remaining transaction structure from the file
+  inFile.read(reinterpret_cast<char*>(&transaction), sizeof(transaction));
 
-    // Read the remaining transaction structure from the file
-    inFile.read(reinterpret_cast<char*>(&transaction), sizeof(transaction));
-
-    inFile.close();
-  } else {
-    throw std::runtime_error("opening file for reading.");
-  }
+  inFile.close();
 }
