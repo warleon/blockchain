@@ -6,10 +6,10 @@ int main(int argc, char* argv[]) {
   while (listening) {
     std::cout << "Enter a command: ";
     std::getline(std::cin, line);
-    svec splited = split(line, " \n");
+    svec splited = split(line, " ");
     // std::cout << splited << std::endl;
-    errorCode e = interpretCommand(splited, listening);
-    if (e != good) std::cout << "error ocurred" << std::endl;
+    Interpreter::errorCode e = Interpreter::exec(splited, listening);
+    if (e != Interpreter::good) std::cout << "error ocurred" << std::endl;
   }
 
   return 0;

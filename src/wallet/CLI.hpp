@@ -1,7 +1,11 @@
+#pragma once
 #include <iostream>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "./filehash.hpp"
+#include "./keyGen.hpp"
 
 typedef std::vector<std::string> svec;
 
@@ -29,6 +33,8 @@ std::ostream& operator<<(std::ostream& os, const svec& words) {
   return os;
 }
 
+namespace Interpreter {
+
 enum errorCode {
   good = 0,
   noMatch,
@@ -37,28 +43,29 @@ enum errorCode {
   execiveArguments,
   invalidArguments
 };
-errorCode verifyCommandSize(size_t size, size_t expectedSize) {
+errorCode verifySize(size_t size, size_t expectedSize) {
   if (size < expectedSize) return incompleteArguments;
   if (size > expectedSize) return execiveArguments;
   return good;
 }
 
-errorCode interpretCommand(const svec& command_args, bool& listen) {
+errorCode exec(const svec& command_args, bool& listen) {
   if (!command_args.size()) return noCommand;
   errorCode err = good;
   const std::string& command = command_args[0];
   const size_t argc = command_args.size() - 1;
   if (command == "GEN_KEY_PAIR") {
-    err = verifyCommandSize(argc, 1);
+    err = verifySize(argc, 1);
     // generate key pair
   } else if (command == "SHA256_FILE") {
-    err = verifyCommandSize(argc, 1);
+    err = verifySize(argc, 1);
     // hash file
   } else if (command == "EXIT") {
-    err = verifyCommandSize(argc, 0);
+    err = verifySize(argc, 0);
     listen = false;
   } else {
     err = noMatch;
   }
   return err;
 }
+}  // namespace Interpreter
