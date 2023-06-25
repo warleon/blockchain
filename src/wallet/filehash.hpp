@@ -6,14 +6,14 @@
 namespace Hash {
 
 const int hashSize = SHA256_DIGEST_LENGTH;
-typedef unsigned char hash_t[hashSize];
+typedef unsigned char type[hashSize];
 
 enum errorCode {
   good = 0,
   noFile,
 };
 
-errorCode file(const std::string& filename, hash_t& hash) {
+errorCode file(const std::string& filename, type& hash) {
   SHA256_CTX sha256Context;
   std::ifstream file(filename, std::ifstream::binary);
   if (!file) return noFile;
@@ -23,6 +23,7 @@ errorCode file(const std::string& filename, hash_t& hash) {
     SHA256_Update(&sha256Context, buffer, file.gcount());
   }
   SHA256_Final(hash, &sha256Context);
+  return good;
 }
 
 }  // namespace Hash

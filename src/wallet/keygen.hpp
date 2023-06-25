@@ -50,6 +50,8 @@ class Key {
     if (PEM_write_bio_RSAPrivateKey(bpPrivate, rsa, NULL, NULL, 0, NULL,
                                     NULL) != 1)
       return cantWritePrivateKey;
+
+    return good;
   }
 };
 

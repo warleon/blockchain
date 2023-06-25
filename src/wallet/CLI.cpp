@@ -1,14 +1,13 @@
 #include "./CLI.hpp"
 
 int main(int argc, char* argv[]) {
-  bool listening = true;
   std::string line;
-  while (listening) {
+  while (Interpreter::listen) {
     std::cout << "Enter a command: ";
     std::getline(std::cin, line);
     svec splited = split(line, " ");
     // std::cout << splited << std::endl;
-    Interpreter::errorCode e = Interpreter::exec(splited, listening);
+    Interpreter::errorCode e = Interpreter::exec(splited);
     if (e != Interpreter::good) std::cout << "error ocurred" << std::endl;
   }
 

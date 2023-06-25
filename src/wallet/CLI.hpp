@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "./filehash.hpp"
+#include "./globals.hpp"
 #include "./keyGen.hpp"
 
 typedef std::vector<std::string> svec;
@@ -35,6 +36,18 @@ std::ostream& operator<<(std::ostream& os, const svec& words) {
 
 namespace Interpreter {
 
+namespace util {
+void printHash(const Hash::type& h) {
+  const int* casted = (const int*)h;
+
+  for (int i = 0; i < Hash::hashSize / sizeof(int); i++) {
+    std::cout << std::hex << std::setfill('0') << std::setw(8) << casted[i]
+              << " ";
+  }
+  std::cout << std::endl;
+}
+}  // namespace util
+
 enum errorCode {
   good = 0,
   noMatch,
@@ -49,19 +62,30 @@ errorCode verifySize(size_t size, size_t expectedSize) {
   return good;
 }
 
-errorCode exec(const svec& command_args, bool& listen) {
+errorCode exec(const svec& command_args) {
   if (!command_args.size()) return noCommand;
   errorCode err = good;
   const std::string& command = command_args[0];
   const size_t argc = command_args.size() - 1;
+  const svec& argv = command_args;
+
   if (command == "GEN_KEY_PAIR") {
-    err = verifySize(argc, 1);
-    // generate key pair
+    err = verifySize(argc, 2);
+    if (err != good) return err;
+    Keygen::genKeyPair(argv[1], stoll(argv[2]));
+
   } else if (command == "SHA256_FILE") {
     err = verifySize(argc, 1);
-    // hash file
+    if (err != good) return err;
+    Hash::file(argv[1], lastHash);
+    util::printHash(lastHash);
+  } else if (command == "LAST_HASH") {
+    err = verifySize(argc, 0);
+    if (err != good) return err;
+    util::printHash(lastHash);
   } else if (command == "EXIT") {
     err = verifySize(argc, 0);
+    if (err != good) return err;
     listen = false;
   } else {
     err = noMatch;
