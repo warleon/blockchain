@@ -4,9 +4,10 @@
 #include <utility>
 #include <vector>
 
+#include "./errorCode.hpp"
 #include "./filehash.hpp"
 #include "./globals.hpp"
-#include "./keyGen.hpp"
+#include "./keygen.hpp"
 
 typedef std::vector<std::string> svec;
 
@@ -48,14 +49,6 @@ void printHash(const Hash::type& h) {
 }
 }  // namespace util
 
-enum errorCode {
-  good = 0,
-  noMatch,
-  noCommand,
-  incompleteArguments,
-  execiveArguments,
-  invalidArguments
-};
 errorCode verifySize(size_t size, size_t expectedSize) {
   if (size < expectedSize) return incompleteArguments;
   if (size > expectedSize) return execiveArguments;
@@ -72,7 +65,7 @@ errorCode exec(const svec& command_args) {
   if (command == "GEN_KEY_PAIR") {
     err = verifySize(argc, 2);
     if (err != good) return err;
-    Keygen::genKeyPair(argv[1], stoll(argv[2]));
+    return Keygen::genKeyPair(argv[1], stol(argv[2]));
 
   } else if (command == "SHA256_FILE") {
     err = verifySize(argc, 1);

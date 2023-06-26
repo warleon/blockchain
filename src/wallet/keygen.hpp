@@ -5,19 +5,12 @@
 #include <filesystem>
 #include <stdexcept>
 #include <vector>
+
+#include "./errorCode.hpp"
 namespace fs = std::filesystem;
 namespace Keygen {
 
-enum erroCode {
-  good = 0,
-  cantCreateBigNum,
-  cantCreateRSA,
-  cantWritePublicKey,
-  cantWritePrivateKey,
-  unableToContinue
-};
-
-std::vector<erroCode> errors{};
+std::vector<errorCode> errors{};
 
 class Key {
   RSA *rsa = nullptr;
@@ -39,9 +32,9 @@ class Key {
     if (bpPublic) BIO_free_all(bpPublic);
     if (bpPrivate) BIO_free_all(bpPrivate);
   }
-  erroCode toFiles(const std::string &publicKeyFile,
-                   const std::string &privateKeyFile) {
-    if (errors.size()) return unableToContinue;
+  errorCode toFiles(const fs::path publicKeyFile,
+                    const fs::path privateKeyFile) {
+    if (errors.size()) return multipleErrors;
     bpPublic = BIO_new_file(publicKeyFile.c_str(), "w+");
     if (PEM_write_bio_RSAPublicKey(bpPublic, rsa) != 1)
       return cantWritePublicKey;
@@ -55,8 +48,9 @@ class Key {
   }
 };
 
-erroCode genKeyPair(fs::path path, size_t keysize) {
-  Key pair(keysize);
+errorCode genKeyPair(fs::path path, int strength) {
+  static int keysize[] = {1024, 2048, 4096, 8192};
+  Key pair(keysize[strength]);
   fs::create_directories(path);
   return pair.toFiles(path / "pubkey.pem", path / "privkey.pem");
 }
