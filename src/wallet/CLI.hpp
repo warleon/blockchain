@@ -93,12 +93,12 @@ errorCode generateKeyPair(int argc, const svec& argv) {
   fs::path path = argv[1];
   int strength = stol(argv[2]);
 
-  lastKeyPair.freeKey();
-  err = lastKeyPair.generate(keysize[strength]);
-  if (err != good) return err;
+  Keygen::Key newkey;
+  newkey.generate(keysize[strength]);
 
   fs::create_directories(path);
-  return lastKeyPair.toFiles(path / "pubkey.pem", path / "privkey.pem");
+  err = newkey.toFiles(path / "pubkey.pem", path / "privkey.pem");
+  return err;
 }
 errorCode hashFile(int argc, const svec& argv) {
   errorCode err = verifySize(argc, 2);

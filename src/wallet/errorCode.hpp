@@ -20,7 +20,7 @@ enum errorCode {
 };
 
 const std::unordered_map<errorCode, std::string> what{
-    {good, "Al good"},
+    {good, "All good"},
     {noMatch, "Unknown command"},
     {noCommand, "At least one command must be suplied"},
     {incompleteArguments, "Not enough arguments suplied to the chosen command"},

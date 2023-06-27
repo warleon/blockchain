@@ -10,6 +10,5 @@ namespace Interpreter {
 
 Hash::type lastHash = {};
 bool listen = true;
-Keygen::Key lastKeyPair;
 
 }  // namespace Interpreter
