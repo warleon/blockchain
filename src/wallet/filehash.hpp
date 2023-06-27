@@ -3,15 +3,12 @@
 
 #include <fstream>
 
+#include "./errorCode.hpp"
+
 namespace Hash {
 
 const int hashSize = SHA256_DIGEST_LENGTH;
 typedef unsigned char type[hashSize];
-
-enum errorCode {
-  good = 0,
-  noFile,
-};
 
 errorCode file(const std::string& filename, type& hash) {
   SHA256_CTX sha256Context;

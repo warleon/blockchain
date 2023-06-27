@@ -15,7 +15,8 @@ enum errorCode {
   cantCreateRSA,
   cantWritePublicKey,
   cantWritePrivateKey,
-  multipleErrors,
+
+  noFile = 300,
 };
 
 const std::unordered_map<errorCode, std::string> what{
@@ -23,8 +24,7 @@ const std::unordered_map<errorCode, std::string> what{
     {noMatch, "Unknown command"},
     {noCommand, "At least one command must be suplied"},
     {incompleteArguments, "Not enough arguments suplied to the chosen command"},
-    {execiveArguments,
-     "Too many arguments suplied to the chosen command some will be ignored"},
+    {execiveArguments, "Too many arguments suplied to the chosen command"},
     {invalidArguments,
      "Some of the arguments suplid for the command is not a valid one"},
 
@@ -32,5 +32,6 @@ const std::unordered_map<errorCode, std::string> what{
     {cantCreateRSA, "Can't create an RSA object"},
     {cantWritePublicKey, "Can't write the public key to the chosen file"},
     {cantWritePrivateKey, "Can't write the private key to the chosen file"},
-    {multipleErrors, "Multiple errors have arrised"},
+
+    {noFile, "The suplied file does not exists"},
 };

@@ -10,31 +10,34 @@
 namespace fs = std::filesystem;
 namespace Keygen {
 
-std::vector<errorCode> errors{};
-
 class Key {
   RSA *rsa = nullptr;
   BIGNUM *bne = nullptr;
   BIO *bpPublic = nullptr, *bpPrivate = nullptr;
 
  public:
-  Key(int keyLength) {
+  Key() {}
+
+  errorCode generate(int keyLength) {
     bne = BN_new();
-    if (BN_set_word(bne, RSA_F4) != 1) errors.push_back(cantCreateBigNum);
+    if (BN_set_word(bne, RSA_F4) != 1) return cantCreateBigNum;
 
     rsa = RSA_new();
     if (RSA_generate_key_ex(rsa, keyLength, bne, NULL) != 1)
-      errors.push_back(cantCreateRSA);
+      return cantCreateRSA;
+
+    return good;
   }
-  ~Key() {
+  void freeKey() {
     if (rsa) RSA_free(rsa);
     if (bne) BN_free(bne);
     if (bpPublic) BIO_free_all(bpPublic);
     if (bpPrivate) BIO_free_all(bpPrivate);
   }
+
+  ~Key() { freeKey(); }
   errorCode toFiles(const fs::path publicKeyFile,
                     const fs::path privateKeyFile) {
-    if (errors.size()) return multipleErrors;
     bpPublic = BIO_new_file(publicKeyFile.c_str(), "w+");
     if (PEM_write_bio_RSAPublicKey(bpPublic, rsa) != 1)
       return cantWritePublicKey;
@@ -47,12 +50,5 @@ class Key {
     return good;
   }
 };
-
-errorCode genKeyPair(fs::path path, int strength) {
-  static int keysize[] = {1024, 2048, 4096, 8192};
-  Key pair(keysize[strength]);
-  fs::create_directories(path);
-  return pair.toFiles(path / "pubkey.pem", path / "privkey.pem");
-}
 
 }  // namespace Keygen

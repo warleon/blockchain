@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -47,6 +48,7 @@ void printHash(const Hash::type& h) {
   }
   std::cout << std::endl;
 }
+
 }  // namespace util
 
 errorCode verifySize(size_t size, size_t expectedSize) {
@@ -55,34 +57,65 @@ errorCode verifySize(size_t size, size_t expectedSize) {
   return good;
 }
 
+typedef errorCode (*command_t)(int, const svec&);
+errorCode generateKeyPair(int, const svec&);
+errorCode hashFile(int, const svec&);
+errorCode printLastHash(int, const svec&);
+errorCode stopListening(int, const svec&);
+
+const std::unordered_map<std::string, command_t> commandList{
+    {"GEN_KEY_PAIR", generateKeyPair},
+    {"SHA256_FILE", hashFile},
+    {"LAST_HASH", printLastHash},
+    {"EXIT", stopListening},
+};
+
 errorCode exec(const svec& command_args) {
   if (!command_args.size()) return noCommand;
   errorCode err = good;
   const std::string& command = command_args[0];
-  const size_t argc = command_args.size() - 1;
+  const size_t argc = command_args.size();
   const svec& argv = command_args;
 
-  if (command == "GEN_KEY_PAIR") {
-    err = verifySize(argc, 2);
-    if (err != good) return err;
-    return Keygen::genKeyPair(argv[1], stol(argv[2]));
+  auto cit = commandList.find(command);
 
-  } else if (command == "SHA256_FILE") {
-    err = verifySize(argc, 1);
-    if (err != good) return err;
-    Hash::file(argv[1], lastHash);
-    util::printHash(lastHash);
-  } else if (command == "LAST_HASH") {
-    err = verifySize(argc, 0);
-    if (err != good) return err;
-    util::printHash(lastHash);
-  } else if (command == "EXIT") {
-    err = verifySize(argc, 0);
-    if (err != good) return err;
-    listen = false;
-  } else {
-    err = noMatch;
+  if (cit != commandList.end()) {
+    return cit->second(argc, argv);
   }
-  return err;
+  return noMatch;
+}
+
+errorCode generateKeyPair(int argc, const svec& argv) {
+  static int keysize[] = {1024, 2048, 4096, 8192};
+  errorCode err = verifySize(argc, 3);
+  fs::path path = argv[1];
+  int strength = stol(argv[2]);
+
+  lastKeyPair.freeKey();
+  err = lastKeyPair.generate(keysize[strength]);
+  if (err != good) return err;
+
+  fs::create_directories(path);
+  return lastKeyPair.toFiles(path / "pubkey.pem", path / "privkey.pem");
+}
+errorCode hashFile(int argc, const svec& argv) {
+  errorCode err = verifySize(argc, 2);
+  if (err != good) return err;
+  err = Hash::file(argv[1], lastHash);
+  if (err != good) return err;
+  util::printHash(lastHash);
+  return good;
+}
+errorCode printLastHash(int argc, const svec& argv) {
+  errorCode err = verifySize(argc, 1);
+  if (err != good) return err;
+  util::printHash(lastHash);
+  return good;
+}
+errorCode stopListening(int argc, const svec& argv) {
+  errorCode err = verifySize(argc, 1);
+  if (err != good) return err;
+  listen = false;
+  return good;
 }
 }  // namespace Interpreter
