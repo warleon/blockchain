@@ -1,6 +1,7 @@
 #include "./CLI.hpp"
 
 int main(int argc, char* argv[]) {
+  OpenSSL_add_all_algorithms();
   std::string line;
   while (Interpreter::listen) {
     std::cout << "Enter a command: ";

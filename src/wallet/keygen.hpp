@@ -13,7 +13,6 @@ namespace Keygen {
 class Key {
   RSA *rsa = nullptr;
   BIGNUM *bne = nullptr;
-  BIO *bpPublic = nullptr, *bpPrivate = nullptr;
 
  public:
   Key() {}
@@ -31,21 +30,25 @@ class Key {
   void freeKey() {
     if (rsa) RSA_free(rsa);
     if (bne) BN_free(bne);
-    if (bpPublic) BIO_free_all(bpPublic);
-    if (bpPrivate) BIO_free_all(bpPrivate);
   }
 
   ~Key() { freeKey(); }
   errorCode toFiles(const fs::path publicKeyFile,
                     const fs::path privateKeyFile) {
-    bpPublic = BIO_new_file(publicKeyFile.c_str(), "w+");
-    if (PEM_write_bio_RSAPublicKey(bpPublic, rsa) != 1)
+    FILE *private_key_file_ptr = fopen(privateKeyFile.c_str(), "w");
+    FILE *public_key_file_ptr = fopen(publicKeyFile.c_str(), "w");
+    if (PEM_write_RSAPublicKey(public_key_file_ptr, rsa) != 1) {
+      fclose(private_key_file_ptr);
+      fclose(public_key_file_ptr);
       return cantWritePublicKey;
+    }
 
-    bpPrivate = BIO_new_file(privateKeyFile.c_str(), "w+");
-    if (PEM_write_bio_RSAPrivateKey(bpPrivate, rsa, NULL, NULL, 0, NULL,
-                                    NULL) != 1)
+    if (PEM_write_RSAPrivateKey(private_key_file_ptr, rsa, NULL, NULL, 0, NULL,
+                                NULL) != 1) {
+      fclose(private_key_file_ptr);
+      fclose(public_key_file_ptr);
       return cantWritePrivateKey;
+    }
 
     return good;
   }
