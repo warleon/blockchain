@@ -11,8 +11,9 @@ namespace fs = std::filesystem;
 namespace Keygen {
 
 class Key {
-  RSA *rsa = nullptr;
-  BIGNUM *bne = nullptr;
+  RSA* rsa = nullptr;
+  BIGNUM* bne = nullptr;
+  BIO *bpPublic = nullptr, *bpPrivate = nullptr;
 
  public:
   Key() {}
@@ -29,26 +30,26 @@ class Key {
   }
   void freeKey() {
     if (rsa) RSA_free(rsa);
+    rsa = nullptr;
     if (bne) BN_free(bne);
+    bne = nullptr;
+    if (bpPublic) BIO_free_all(bpPublic);
+    bpPublic = nullptr;
+    if (bpPrivate) BIO_free_all(bpPrivate);
+    bpPrivate = nullptr;
   }
 
   ~Key() { freeKey(); }
-  errorCode toFiles(const fs::path publicKeyFile,
-                    const fs::path privateKeyFile) {
-    FILE *private_key_file_ptr = fopen(privateKeyFile.c_str(), "w");
-    FILE *public_key_file_ptr = fopen(publicKeyFile.c_str(), "w");
-    if (PEM_write_RSAPublicKey(public_key_file_ptr, rsa) != 1) {
-      fclose(private_key_file_ptr);
-      fclose(public_key_file_ptr);
+  errorCode toFiles(const std::string& publicKeyFile,
+                    const std::string& privateKeyFile) {
+    bpPublic = BIO_new_file(publicKeyFile.c_str(), "w+");
+    if (PEM_write_bio_RSAPublicKey(bpPublic, rsa) != 1)
       return cantWritePublicKey;
-    }
 
-    if (PEM_write_RSAPrivateKey(private_key_file_ptr, rsa, NULL, NULL, 0, NULL,
-                                NULL) != 1) {
-      fclose(private_key_file_ptr);
-      fclose(public_key_file_ptr);
+    bpPrivate = BIO_new_file(privateKeyFile.c_str(), "w+");
+    if (PEM_write_bio_RSAPrivateKey(bpPrivate, rsa, NULL, NULL, 0, NULL,
+                                    NULL) != 1)
       return cantWritePrivateKey;
-    }
 
     return good;
   }
