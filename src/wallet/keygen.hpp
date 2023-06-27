@@ -53,6 +53,33 @@ class Key {
 
     return good;
   }
+
+  errorCode serializePublicKey(std::string& serializedKey) {
+    BIO* bio = BIO_new(BIO_s_mem());
+    if (PEM_write_bio_RSAPublicKey(bio, rsa) != 1) {
+      BIO_free(bio);
+      return cantWritePublicKey;
+    }
+    char* buffer = nullptr;
+    long length = BIO_get_mem_data(bio, &buffer);
+    serializedKey.assign(buffer, buffer + length);
+    BIO_free(bio);
+    return good;
+  }
+  errorCode serializePrivateKey(std::string& serializedKey) {
+    BIO* bio = BIO_new(BIO_s_mem());
+    if (PEM_write_bio_RSAPrivateKey(bio, rsa, NULL, NULL, 0, NULL, NULL) != 1) {
+      BIO_free(bio);
+      return cantWritePublicKey;
+    }
+    char* buffer = nullptr;
+    long length = BIO_get_mem_data(bio, &buffer);
+    serializedKey.assign(buffer, buffer + length);
+    BIO_free(bio);
+    return good;
+  }
+  errorCode deserializePublicKey() {}
+  errorCode deserializePrivateKey() {}
 };
 
 }  // namespace Keygen

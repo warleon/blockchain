@@ -96,8 +96,16 @@ errorCode generateKeyPair(int argc, const svec& argv) {
   Keygen::Key newkey;
   newkey.generate(keysize[strength]);
 
-  fs::create_directories(path);
-  err = newkey.toFiles(path / "pubkey.pem", path / "privkey.pem");
+  std::string pubkeystr, privkeystr;
+  err = newkey.serializePublicKey(pubkeystr);
+  if (err != good) return err;
+  err = newkey.serializePrivateKey(privkeystr);
+  if (err != good) return err;
+  std::cout << pubkeystr << std::endl;
+  std::cout << privkeystr << std::endl;
+
+  // fs::create_directories(path);
+  // err = newkey.toFiles(path / "pubkey.pem", path / "privkey.pem");
   return err;
 }
 errorCode hashFile(int argc, const svec& argv) {
