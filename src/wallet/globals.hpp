@@ -3,7 +3,7 @@
 #include <cstring>
 #include <vector>
 
-#include "./filehash.hpp"
+#include "./hash.hpp"
 #include "./keygen.hpp"
 
 namespace Interpreter {

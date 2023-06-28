@@ -7,8 +7,8 @@
 #include <vector>
 
 #include "./errorCode.hpp"
-#include "./filehash.hpp"
 #include "./globals.hpp"
+#include "./hash.hpp"
 #include "./keygen.hpp"
 
 typedef std::vector<std::string> svec;
@@ -58,12 +58,15 @@ errorCode hashFile(int, const svec&);
 errorCode printLastHash(int, const svec&);
 errorCode stopListening(int, const svec&);
 errorCode printAvailableCommands(int, const svec&);
+errorCode createTransaction(int, const svec&);
 
 const std::unordered_map<std::string, command_t> commandList{
-    {"GEN_KEY_PAIR", generateKeyPair}, {"SHA256_FILE", hashFile},
-    {"LAST_HASH", printLastHash},      {"EXIT", stopListening},
+    {"GEN_KEY_PAIR", generateKeyPair},
+    {"SHA256_FILE", hashFile},
+    {"LAST_HASH", printLastHash},
+    {"EXIT", stopListening},
     {"HELP", printAvailableCommands},
-};
+    {"CLAIM_HASHED_FILE", createTransaction}};
 
 errorCode exec(const svec& command_args) {
   if (!command_args.size()) return noCommand;
