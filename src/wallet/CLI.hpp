@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -68,10 +69,12 @@ errorCode exec(const svec& command_args) {
   if (!command_args.size()) return noCommand;
   errorCode err = good;
   const std::string& command = command_args[0];
+  std::string capCom(command);
+  std::transform(capCom.begin(), capCom.end(), capCom.begin(), ::toupper);
   const int argc = command_args.size();
   const svec& argv = command_args;
 
-  auto cit = commandList.find(command);
+  auto cit = commandList.find(capCom);
 
   if (cit != commandList.end()) {
     return cit->second(argc, argv);
@@ -87,25 +90,21 @@ errorCode verifySize(int size, int expectedSize) {
 errorCode generateKeyPair(int argc, const svec& argv) {
   static const int keysize[] = {1024, 2048, 4096, 8192};
 
-  errorCode err = verifySize(argc, 3);
+  errorCode err = verifySize(argc, 2);
   if (err != good) return err;
 
-  fs::path path = argv[1];
-  int strength = stol(argv[2]);
+  // fs::path path = argv[1];
+  int strength = stol(argv[1]);
 
   Keygen::Key newkey;
   newkey.generate(keysize[strength]);
 
-  std::string pubkeystr, privkeystr;
-  err = newkey.serializePublicKey(pubkeystr);
+  err = newkey.serializePublicKey(lastSerializedPublicKey);
   if (err != good) return err;
-  err = newkey.serializePrivateKey(privkeystr);
+  err = newkey.serializePrivateKey(lastSerializedPrivateKey);
   if (err != good) return err;
-  std::cout << pubkeystr << std::endl;
-  std::cout << privkeystr << std::endl;
-
-  // fs::create_directories(path);
-  // err = newkey.toFiles(path / "pubkey.pem", path / "privkey.pem");
+  std::cout << lastSerializedPublicKey << std::endl;
+  std::cout << lastSerializedPrivateKey << std::endl;
   return err;
 }
 errorCode hashFile(int argc, const svec& argv) {

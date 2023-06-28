@@ -78,8 +78,20 @@ class Key {
     BIO_free(bio);
     return good;
   }
-  errorCode deserializePublicKey() {}
-  errorCode deserializePrivateKey() {}
+  errorCode readSerializedPublicKey(std::string& serializedKey) {
+    BIO* bio = BIO_new(BIO_s_mem());
+    BIO_write(bio, serializedKey.data(), (int)serializedKey.size());
+    PEM_read_bio_RSAPublicKey(bio, &rsa, nullptr, nullptr);
+    BIO_free(bio);
+    return good;
+  }
+  errorCode readSerializedPrivateKey(std::string& serializedKey) {
+    BIO* bio = BIO_new(BIO_s_mem());
+    BIO_write(bio, serializedKey.data(), (int)serializedKey.size());
+    PEM_read_bio_RSAPrivateKey(bio, &rsa, nullptr, nullptr);
+    BIO_free(bio);
+    return good;
+  }
 };
 
 }  // namespace Keygen

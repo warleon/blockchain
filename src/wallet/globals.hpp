@@ -11,4 +11,7 @@ namespace Interpreter {
 Hash::type lastHash = {};
 bool listen = true;
 
+std::string lastSerializedPublicKey;
+std::string lastSerializedPrivateKey;
+
 }  // namespace Interpreter
