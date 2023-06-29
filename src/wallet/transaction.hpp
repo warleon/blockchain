@@ -65,6 +65,24 @@ void write(std::ofstream& ofs, const type& transaction) {
   ofs.write(transaction.signature.c_str(), signsize);
   ofs.write((char*)&transaction.id, Hash::hashSize);
 }
+void read(std::ifstream& ifs, type& transaction) {
+  ifs.read((char*)&transaction.type, sizeof(category));
+  ifs.read((char*)&transaction.hash, Hash::hashSize);
+  int pubkeysize = 0;
+  ifs.read((char*)&pubkeysize, sizeof(int));
+  char* pubkeybuff = new char[pubkeysize];
+  ifs.read(pubkeybuff, pubkeysize);
+  transaction.publickey = std::string(pubkeybuff, pubkeybuff + pubkeysize);
+  int signsize = 0;
+  ifs.read((char*)&signsize, sizeof(int));
+  char* signbuff = new char[signsize];
+  ifs.read(signbuff, signsize);
+  transaction.signature = std::string(signbuff, signbuff + signsize);
+  ifs.read((char*)&transaction.id, Hash::hashSize);
+
+  delete pubkeybuff;
+  delete signbuff;
+}
 }  // namespace Transaction
 
 std::ostream& operator<<(std::ostream& os,
