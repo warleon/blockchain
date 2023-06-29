@@ -4,6 +4,7 @@
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 
+#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -53,6 +54,17 @@ errorCode setId(type& trans) {
   return good;
 }
 
+void write(std::ofstream& ofs, const type& transaction) {
+  ofs.write((char*)&transaction.type, sizeof(category));
+  ofs.write((char*)&transaction.hash, Hash::hashSize);
+  int pubkeysize = transaction.publickey.size();
+  ofs.write((char*)&pubkeysize, sizeof(int));
+  ofs.write(transaction.publickey.c_str(), pubkeysize);
+  int signsize = transaction.publickey.size();
+  ofs.write((char*)&signsize, sizeof(int));
+  ofs.write(transaction.signature.c_str(), signsize);
+  ofs.write((char*)&transaction.id, Hash::hashSize);
+}
 }  // namespace Transaction
 
 std::ostream& operator<<(std::ostream& os,
