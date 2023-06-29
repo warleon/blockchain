@@ -4,15 +4,18 @@
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 
+#include <iostream>
 #include <string>
 
 #include "./errorCode.hpp"
 #include "./hash.hpp"
 #include "./keygen.hpp"
+#include "./util.hpp"
 
 namespace Transaction {
 
 enum category { null, claim, transference };
+const char* what[] = {"null", "claim", "transference"};
 typedef struct {
   category type;
   Hash::type hash;
@@ -51,3 +54,13 @@ errorCode setId(type& trans) {
 }
 
 }  // namespace Transaction
+
+std::ostream& operator<<(std::ostream& os,
+                         const Transaction::type& transaction) {
+  os << Transaction::what[transaction.type] << std::endl;
+  os << transaction.hash << std::endl;
+  os << transaction.publickey << std::endl;
+  os << util::asHex(transaction.signature) << std::endl;
+  os << transaction.id << std::endl;
+  return os;
+}

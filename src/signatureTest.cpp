@@ -8,6 +8,8 @@
 #include <iostream>
 #include <string>
 
+#include "./wallet/util.hpp"
+
 int main() {
   OpenSSL_add_all_algorithms();
   ERR_load_BIO_strings();
@@ -28,7 +30,7 @@ int main() {
   fclose(public_key_file_ptr);
 
   // Data to be signed
-  unsigned char data[] = "Data to be signed";
+  unsigned char data[] = "hola kiero firmar esto porfavor";
   unsigned int data_len = strlen((char *)data);
 
   // Create a hash of the data
@@ -45,8 +47,8 @@ int main() {
     // Error occurred while signing
     // Handle the error here
   }
-  std::cout << std::hex
-            << std::string(signature, signature + signature_len).c_str()
+  std::cout << signature_len << std::endl;
+  std::cout << util::asHex(std::string(signature, signature + signature_len))
             << std::endl;
 
   // Verify the signature using the public key

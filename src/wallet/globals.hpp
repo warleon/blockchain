@@ -5,6 +5,7 @@
 
 #include "./hash.hpp"
 #include "./keygen.hpp"
+#include "./transaction.hpp"
 
 namespace Interpreter {
 
@@ -13,5 +14,7 @@ bool listen = true;
 
 std::string lastSerializedPublicKey;
 std::string lastSerializedPrivateKey;
+
+Transaction::type lastTransaction;
 
 }  // namespace Interpreter

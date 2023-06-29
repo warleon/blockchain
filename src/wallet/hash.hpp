@@ -2,6 +2,7 @@
 #include <openssl/sha.h>
 
 #include <fstream>
+#include <iomanip>
 
 #include "./errorCode.hpp"
 
@@ -28,3 +29,12 @@ errorCode bytes(const char* data, int size, type& hash) {
 }
 
 }  // namespace Hash
+
+std::ostream& operator<<(std::ostream& os, const Hash::type& hash) {
+  const int* casted = (const int*)hash;
+
+  for (int i = 0; i < Hash::hashSize / sizeof(int); i++) {
+    os << std::hex << std::setfill('0') << std::setw(8) << casted[i] << " ";
+  }
+  return os;
+}

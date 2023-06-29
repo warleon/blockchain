@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <cstring>
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -10,6 +11,7 @@
 #include "./globals.hpp"
 #include "./hash.hpp"
 #include "./keygen.hpp"
+#include "./util.hpp"
 
 typedef std::vector<std::string> svec;
 
@@ -38,19 +40,6 @@ std::ostream& operator<<(std::ostream& os, const svec& words) {
 }
 
 namespace Interpreter {
-
-namespace util {
-void printHash(const Hash::type& h) {
-  const int* casted = (const int*)h;
-
-  for (int i = 0; i < Hash::hashSize / sizeof(int); i++) {
-    std::cout << std::hex << std::setfill('0') << std::setw(8) << casted[i]
-              << " ";
-  }
-  std::cout << std::endl;
-}
-
-}  // namespace util
 
 typedef errorCode (*command_t)(int, const svec&);
 errorCode generateKeyPair(int, const svec&);
@@ -136,6 +125,15 @@ errorCode printAvailableCommands(int argc, const svec& argv) {
   for (const auto& cmd : commandList) {
     std::cout << cmd.first << std::endl;
   }
+  return good;
+}
+errorCode createTransaction(int, const svec&) {
+  lastTransaction.type = Transaction::claim;
+  memcpy(lastTransaction.hash, lastHash, Hash::hashSize);
+  lastTransaction.publickey = lastSerializedPublicKey;
+  Transaction::sign(lastTransaction, lastSerializedPrivateKey);
+  Transaction::setId(lastTransaction);
+  std::cout << lastTransaction << std::endl;
   return good;
 }
 }  // namespace Interpreter
