@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -49,14 +50,17 @@ errorCode stopListening(int, const svec&);
 errorCode printAvailableCommands(int, const svec&);
 errorCode createTransaction(int, const svec&);
 errorCode claimFile(int, const svec&);
+errorCode writeTransaction(int, const svec&);
+errorCode readTransaction(int, const svec&);
+errorCode printTransaction(int, const svec&);
 
 const std::unordered_map<std::string, command_t> commandList{
     // {"GEN_KEY_PAIR", generateKeyPair},
     // {"SHA256_FILE", hashFile},
     // {"LAST_HASH", printLastHash},
-    {"CLAIM", claimFile},
-    {"EXIT", stopListening},
-    {"HELP", printAvailableCommands},
+    {"PRINT", printTransaction},    {"READ_FROM", readTransaction},
+    {"WRITE_TO", writeTransaction}, {"CLAIM", claimFile},
+    {"EXIT", stopListening},        {"HELP", printAvailableCommands},
     // {"CLAIM_HASHED_FILE", createTransaction}
 };
 
@@ -98,7 +102,8 @@ errorCode generateKeyPair(int argc, const svec& argv) {
   if (err != good) return err;
   err = newkey.serializePrivateKey(lastSerializedPrivateKey);
   if (err != good) return err;
-  std::cout << lastSerializedPublicKey << lastSerializedPrivateKey << std::endl;
+  // std::cout << lastSerializedPublicKey << lastSerializedPrivateKey <<
+  // std::endl;
   return err;
 }
 errorCode hashFile(int argc, const svec& argv) {
@@ -106,7 +111,7 @@ errorCode hashFile(int argc, const svec& argv) {
   if (err != good) return err;
   err = Hash::file(argv[1], lastHash);
   if (err != good) return err;
-  util::printHash(lastHash);
+  // util::printHash(lastHash);
   return good;
 }
 errorCode printLastHash(int argc, const svec& argv) {
@@ -137,7 +142,6 @@ errorCode createTransaction(int argc, const svec& argv) {
   lastTransaction.publickey = lastSerializedPublicKey;
   Transaction::sign(lastTransaction, lastSerializedPrivateKey);
   Transaction::setId(lastTransaction);
-  std::cout << lastTransaction << std::endl;
   return good;
 }
 
@@ -150,6 +154,28 @@ errorCode claimFile(int argc, const svec& argv) {
   if (err != good) return err;
   err = createTransaction(1, {argv[0]});
   if (err != good) return err;
+  return good;
+}
+errorCode writeTransaction(int argc, const svec& argv) {
+  errorCode err = verifySize(argc, 2);
+  if (err != good) return err;
+  std::ofstream file(argv[1], std::ios_base::binary);
+  if (!file.is_open()) return cantOpenFile;
+  Transaction::write(file, lastTransaction);
+  return good;
+}
+errorCode readTransaction(int argc, const svec& argv) {
+  errorCode err = verifySize(argc, 2);
+  if (err != good) return err;
+  std::ifstream file(argv[1], std::ios_base::binary);
+  if (!file.is_open()) return cantOpenFile;
+  Transaction::read(file, lastTransaction);
+  return good;
+}
+errorCode printTransaction(int argc, const svec& argv) {
+  errorCode err = verifySize(argc, 1);
+  if (err != good) return err;
+  std::cout << lastTransaction << std::endl;
   return good;
 }
 }  // namespace Interpreter
