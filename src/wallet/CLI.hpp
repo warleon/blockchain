@@ -48,14 +48,17 @@ errorCode printLastHash(int, const svec&);
 errorCode stopListening(int, const svec&);
 errorCode printAvailableCommands(int, const svec&);
 errorCode createTransaction(int, const svec&);
+errorCode claimFile(int, const svec&);
 
 const std::unordered_map<std::string, command_t> commandList{
-    {"GEN_KEY_PAIR", generateKeyPair},
-    {"SHA256_FILE", hashFile},
-    {"LAST_HASH", printLastHash},
+    // {"GEN_KEY_PAIR", generateKeyPair},
+    // {"SHA256_FILE", hashFile},
+    // {"LAST_HASH", printLastHash},
+    {"CLAIM", claimFile},
     {"EXIT", stopListening},
     {"HELP", printAvailableCommands},
-    {"CLAIM_HASHED_FILE", createTransaction}};
+    // {"CLAIM_HASHED_FILE", createTransaction}
+};
 
 errorCode exec(const svec& command_args) {
   if (!command_args.size()) return noCommand;
@@ -95,8 +98,7 @@ errorCode generateKeyPair(int argc, const svec& argv) {
   if (err != good) return err;
   err = newkey.serializePrivateKey(lastSerializedPrivateKey);
   if (err != good) return err;
-  std::cout << lastSerializedPublicKey << std::endl;
-  std::cout << lastSerializedPrivateKey << std::endl;
+  std::cout << lastSerializedPublicKey << lastSerializedPrivateKey << std::endl;
   return err;
 }
 errorCode hashFile(int argc, const svec& argv) {
@@ -127,13 +129,27 @@ errorCode printAvailableCommands(int argc, const svec& argv) {
   }
   return good;
 }
-errorCode createTransaction(int, const svec&) {
+errorCode createTransaction(int argc, const svec& argv) {
+  errorCode err = verifySize(argc, 1);
+  if (err != good) return err;
   lastTransaction.type = Transaction::claim;
   memcpy(lastTransaction.hash, lastHash, Hash::hashSize);
   lastTransaction.publickey = lastSerializedPublicKey;
   Transaction::sign(lastTransaction, lastSerializedPrivateKey);
   Transaction::setId(lastTransaction);
   std::cout << lastTransaction << std::endl;
+  return good;
+}
+
+errorCode claimFile(int argc, const svec& argv) {
+  errorCode err = verifySize(argc, 3);
+  if (err != good) return err;
+  err = hashFile(2, {argv[0], argv[1]});
+  if (err != good) return err;
+  err = generateKeyPair(2, {argv[0], argv[2]});
+  if (err != good) return err;
+  err = createTransaction(1, {argv[0]});
+  if (err != good) return err;
   return good;
 }
 }  // namespace Interpreter
