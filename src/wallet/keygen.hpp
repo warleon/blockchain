@@ -18,6 +18,8 @@ class Key {
  public:
   Key() {}
 
+  RSA* getKeys() { return rsa; }
+
   errorCode generate(int keyLength) {
     bne = BN_new();
     if (BN_set_word(bne, RSA_F4) != 1) return cantCreateBigNum;

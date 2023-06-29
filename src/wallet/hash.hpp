@@ -22,11 +22,8 @@ errorCode file(const std::string& filename, type& hash) {
   SHA256_Final(hash, &sha256Context);
   return good;
 }
-errorCode bytes(void* data, int size, type& hash) {
-  SHA256_CTX sha256Context;
-  SHA256_Init(&sha256Context);
-  SHA256_Update(&sha256Context, data, size);
-  SHA256_Final(hash, &sha256Context);
+errorCode bytes(const char* data, int size, type& hash) {
+  SHA256((const unsigned char*)data, size, hash);
   return good;
 }
 

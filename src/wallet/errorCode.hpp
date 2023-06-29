@@ -17,6 +17,8 @@ enum errorCode {
   cantWritePrivateKey,
 
   noFile = 300,
+
+  cantSign = 400,
 };
 
 const std::unordered_map<errorCode, std::string> what{
@@ -34,4 +36,5 @@ const std::unordered_map<errorCode, std::string> what{
     {cantWritePrivateKey, "Can't write the private key to the chosen file"},
 
     {noFile, "The suplied file does not exists"},
+    {cantSign, "Can't sign"},
 };
