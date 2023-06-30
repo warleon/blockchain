@@ -1,6 +1,9 @@
 
+*.tr
 build
 server
 client
 *.pem
 *.out
+
+cli

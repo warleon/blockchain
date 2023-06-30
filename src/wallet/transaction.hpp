@@ -60,7 +60,7 @@ void write(std::ofstream& ofs, const type& transaction) {
   int pubkeysize = transaction.publickey.size();
   ofs.write((char*)&pubkeysize, sizeof(int));
   ofs.write(transaction.publickey.c_str(), pubkeysize);
-  int signsize = transaction.publickey.size();
+  int signsize = transaction.signature.size();
   ofs.write((char*)&signsize, sizeof(int));
   ofs.write(transaction.signature.c_str(), signsize);
   ofs.write((char*)&transaction.id, Hash::hashSize);
@@ -80,8 +80,8 @@ void read(std::ifstream& ifs, type& transaction) {
   transaction.signature = std::string(signbuff, signbuff + signsize);
   ifs.read((char*)&transaction.id, Hash::hashSize);
 
-  delete pubkeybuff;
-  delete signbuff;
+  delete[] pubkeybuff;
+  delete[] signbuff;
 }
 }  // namespace Transaction
 
