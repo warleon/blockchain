@@ -123,8 +123,6 @@ class connection : public std::enable_shared_from_this<connection> {
   void ReadBody() {
     auto callback = [this](std::error_code ec, std::size_t length) {
       if (!ec) {
-        // ...and they have! The message is now complete, so
-        // add the whole message to incoming queue
         AddToIncomingMessageQueue();
       } else {
         // As above!
