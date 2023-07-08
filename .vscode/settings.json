@@ -13,6 +13,9 @@
     "system_error": "cpp",
     "*.ipp": "cpp",
     "fstream": "cpp",
-    "type_traits": "cpp"
+    "type_traits": "cpp",
+    "queue": "cpp",
+    "mutex": "cpp",
+    "condition_variable": "cpp"
   }
 }
