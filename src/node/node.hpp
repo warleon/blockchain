@@ -11,7 +11,7 @@ namespace asio = boost::asio;
 
 class Node {
  public:
-  typedef connection::tsq_t tsq_t;
+  typedef connection::tsqo_t tsq_t;
   typedef asio::ip::tcp::acceptor listener_t;
 
  private:
@@ -26,7 +26,7 @@ class Node {
 
   bool OnClientConnect(std::shared_ptr<connection> client) { return true; }
   void OnClientDisconnect(std::shared_ptr<connection> client) {}
-  void OnMessage(std::shared_ptr<connection> client, message& msg) {}
+  void OnMessage(std::shared_ptr<connection> client, message::type& msg) {}
 
   void waitForConection() {
     auto callback = [this](std::error_code ec, asio::ip::tcp::socket socket) {
@@ -62,4 +62,33 @@ class Node {
   }
   Node() {}
   ~Node() { stop(); }
+  void nodeBroadcast(const message::type& msg) {
+    bool bInvalidClientExists = false;
+    for (auto& client : connections) {
+      if (client && client->IsConnected()) {
+        client->send(msg);
+      } else {
+        OnClientDisconnect(client);
+        client.reset();
+
+        bInvalidClientExists = true;
+      }
+    }
+    if (bInvalidClientExists)
+      connections.erase(
+          std::remove(connections.begin(), connections.end(), nullptr),
+          connections.end());
+  }
+
+  void Update(size_t nMaxMessages = -1, bool bWait = false) {
+    if (bWait) tsqin.wait();
+
+    size_t nMessageCount = 0;
+    while (nMessageCount < nMaxMessages && !tsqin.empty()) {
+      auto msg = tsqin.pop_front();
+      OnMessage(msg.remote, msg.msg);
+
+      nMessageCount++;
+    }
+  }
 };

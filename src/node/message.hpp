@@ -1,4 +1,5 @@
 #include <string>
+class connection;
 namespace message {
 enum category {
   set_rol_as_node,
@@ -12,20 +13,25 @@ typedef unsigned long int size_t;
 typedef struct {
   category cat;
   size_t size;
-} header;
-typedef std::string body;
+} header_t;
+typedef std::string body_t;
 
 typedef struct {
-  header header;
-  body body;
+  header_t head;
+  body_t body;
 } type;
 
-type make(category cat, body body) {
+type make(category cat, body_t body) {
   type msg;
-  msg.header.cat = cat;
-  msg.header.size = body.size();
+  msg.head.cat = cat;
+  msg.head.size = body.size();
   msg.body = body;
   return msg;
 }
+
+typedef struct {
+  std::shared_ptr<connection> remote = nullptr;
+  type msg;
+} owned_t;
 
 }  // namespace message

@@ -9,15 +9,19 @@ namespace asio = boost::asio;
 class connection : public std::enable_shared_from_this<connection> {
  public:
   typedef tsqueue<message::type> tsq_t;
+  typedef tsqueue<message::owned_t> tsqo_t;
+
+  enum owner_t { worker, client };
 
  private:
   asio::io_context& context;
   asio::ip::tcp::socket socket;
-  tsq_t& tsqin;
+  tsqo_t& tsqin;
   tsq_t tsqout;
   message::type tempmsgin;
   uint32_t id = 0;
-  void writeHeader();
+  owner_t ownedby;
+
   void writeBody() {
     auto callback = [this](std::error_code ec, std::size_t length) {
       if (!ec) {
@@ -32,13 +36,13 @@ class connection : public std::enable_shared_from_this<connection> {
 
     asio::async_write(
         socket,
-        asio::buffer(tsqout.front().body.data(), tsqout.front().header.size),
+        asio::buffer(tsqout.front().body.data(), tsqout.front().head.size),
         callback);
   }
   void writeHeader() {
     auto callback = [this](std::error_code ec, std::size_t length) {
       if (!ec) {
-        if (tsqout.front().header.size > 0) {
+        if (tsqout.front().head.size > 0) {
           writeBody();
         } else {
           tsqout.pop_front();
@@ -52,12 +56,14 @@ class connection : public std::enable_shared_from_this<connection> {
       }
     };
     asio::async_write(
-        socket, asio::buffer(&tsqout.front().header, sizeof(message::header)),
+        socket, asio::buffer(&tsqout.front().head, sizeof(message::header_t)),
         callback);
   }
-  void readHeader();
   void addTemp() {
-    tsqin.push_back(tempmsgin);
+    if (ownedby == worker)
+      tsqin.push_back({this->shared_from_this(), tempmsgin});
+    else
+      tsqin.push_back({nullptr, tempmsgin});
     readHeader();
   }
   void readBody() {
@@ -75,8 +81,8 @@ class connection : public std::enable_shared_from_this<connection> {
   void readHeader() {
     auto callback = [this](std::error_code ec, std::size_t length) {
       if (!ec) {
-        if (tempmsgin.header.size > 0) {
-          tempmsgin.body.resize(tempmsgin.header.size);
+        if (tempmsgin.head.size > 0) {
+          tempmsgin.body.resize(tempmsgin.head.size);
           readBody();
         } else {
           addTemp();
@@ -86,13 +92,13 @@ class connection : public std::enable_shared_from_this<connection> {
       }
     };
     asio::async_read(socket,
-                     asio::buffer(&tempmsgin.header, sizeof(message::header)),
+                     asio::buffer(&tempmsgin.head, sizeof(message::header_t)),
                      callback);
   }
 
  public:
   connection(asio::io_context& asioContext, asio::ip::tcp::socket socket,
-             tsqueue<message::type>& qIn)
+             tsqo_t& qIn)
       : context(asioContext), socket(std::move(socket)), tsqin(qIn) {}
   virtual ~connection() {}
   void listen(uint32_t uid = 0) {
@@ -114,7 +120,7 @@ class connection : public std::enable_shared_from_this<connection> {
   void Disconnect() {
     if (IsConnected()) asio::post(context, [this]() { socket.close(); });
   }
-  void writeMsg(const message::type& msg) {
+  void send(const message::type& msg) {
     asio::post(context, [this, msg]() {
       bool bWritingMessage = !tsqout.empty();
       tsqout.push_back(msg);

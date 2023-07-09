@@ -1,16 +1,10 @@
-#define ASIO_STANDALONE
-#include <asio.hpp>
-#include <asio/ts/buffer.hpp>
-#include <asio/ts/internet.hpp>
-#include <iostream>
+#include "node.hpp"
 
-using asio::ip::tcp;
+#include <iostream>
 
 const int port = 1234;
 
 int main() {
-  asio::error_code ec;
-  asio::io_context context;
-  tcp::socket socket(context);
+  Node node();
   return 0;
 }
