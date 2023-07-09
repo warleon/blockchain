@@ -7,7 +7,10 @@
 namespace asio = boost::asio;
 
 class connection : public std::enable_shared_from_this<connection> {
+ public:
   typedef tsqueue<message::type> tsq_t;
+
+ private:
   asio::io_context& context;
   asio::ip::tcp::socket socket;
   tsq_t& tsqin;
