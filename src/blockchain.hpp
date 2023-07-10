@@ -33,9 +33,3 @@ class Blockchain : public Node {
   virtual void OnMessage(std::shared_ptr<connection> client,
                          message::type& msg) {}
 };
-
-int main() {
-  Blockchain bc;
-  bc.listen(port);
-  return 0;
-}
