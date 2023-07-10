@@ -2,7 +2,7 @@
 class connection;
 namespace message {
 enum category {
-  set_rol_as_node,
+  set_rol_as_worker,
   set_rol_as_client,
   check_and_add_transaction,
   ask_for_block,

@@ -26,10 +26,6 @@ class Node {
   uint32_t idCounter = 10000;
   rol_t rol = connection::client;
 
-  bool OnClientConnect(std::shared_ptr<connection> client) { return true; }
-  void OnClientDisconnect(std::shared_ptr<connection> client) {}
-  void OnMessage(std::shared_ptr<connection> client, message::type& msg) {}
-
   void waitForConection() {
     auto callback = [this](std::error_code ec, asio::ip::tcp::socket socket) {
       if (!ec) {
@@ -112,4 +108,12 @@ class Node {
       nMessageCount++;
     }
   }
+
+ protected:
+  virtual bool OnClientConnect(std::shared_ptr<connection> client) {
+    return true;
+  }
+  virtual void OnClientDisconnect(std::shared_ptr<connection> client) {}
+  virtual void OnMessage(std::shared_ptr<connection> client,
+                         message::type& msg) {}
 };
