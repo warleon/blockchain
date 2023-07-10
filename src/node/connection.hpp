@@ -129,4 +129,7 @@ class connection : public std::enable_shared_from_this<connection> {
       }
     });
   }
+
+  owner_t owner() { return ownedby; }
+  void owner(owner_t o) { ownedby = o; }
 };
