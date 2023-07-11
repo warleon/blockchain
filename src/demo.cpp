@@ -1,7 +1,6 @@
 #include "./CLI.hpp"
 
 int main(int argc, char* argv[]) {
-  OpenSSL_add_all_algorithms();
   std::string line;
   while (Interpreter::listen) {
     std::cout << "Enter a command: ";
@@ -10,6 +9,9 @@ int main(int argc, char* argv[]) {
     errorCode e = Interpreter::exec(splited);
     if (e != good) std::cout << what.at(e) << std::endl;
   }
+  if (Interpreter::bcnode.isListening()) Interpreter::bcnode.stop();
+  if (Interpreter::listeningThread.joinable())
+    Interpreter::listeningThread.join();
 
   return 0;
 }

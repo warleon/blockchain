@@ -53,15 +53,16 @@ errorCode claimFile(int, const svec&);
 errorCode writeTransaction(int, const svec&);
 errorCode readTransaction(int, const svec&);
 errorCode printTransaction(int, const svec&);
+errorCode serverListen(int, const svec&);
+errorCode clientConnect(int, const svec&);
+errorCode sendTransaction(int, const svec&);
 
 const std::unordered_map<std::string, command_t> commandList{
-    // {"GEN_KEY_PAIR", generateKeyPair},
-    // {"SHA256_FILE", hashFile},
-    // {"LAST_HASH", printLastHash},
     {"PRINT", printTransaction},    {"READ_FROM", readTransaction},
     {"WRITE_TO", writeTransaction}, {"CLAIM", claimFile},
     {"EXIT", stopListening},        {"HELP", printAvailableCommands},
-    // {"CLAIM_HASHED_FILE", createTransaction}
+    {"LISTEN", serverListen},       {"CONNECT", clientConnect},
+    {"SEND", sendTransaction},
 };
 
 errorCode exec(const svec& command_args) {
@@ -176,6 +177,27 @@ errorCode printTransaction(int argc, const svec& argv) {
   errorCode err = verifySize(argc, 1);
   if (err != good) return err;
   std::cout << lastTransaction << std::endl;
+  return good;
+}
+errorCode serverListen(int argc, const svec& arg) {
+  errorCode err = verifySize(argc, 2);
+  if (err != good) return err;
+  bcnode.listen((uint16_t)std::stoi(arg[1]));
+  listeningThread = std::thread([]() {
+    while (Interpreter::bcnode.isListening()) {
+      Interpreter::bcnode.update(1, false);
+    }
+  });
+  return good;
+}
+errorCode clientConnect(int argc, const svec& arg) {
+  errorCode err = verifySize(argc, 2);
+  if (err != good) return err;
+  return good;
+}
+errorCode sendTransaction(int argc, const svec& arg) {
+  errorCode err = verifySize(argc, 1);
+  if (err != good) return err;
   return good;
 }
 }  // namespace Interpreter

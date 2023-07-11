@@ -1,9 +1,7 @@
-#include "node.hpp"
-
 #include <iostream>
 #include <unordered_map>
 
-const int port = 1234;
+#include "node.hpp"
 
 class Blockchain : public Node {
  public:

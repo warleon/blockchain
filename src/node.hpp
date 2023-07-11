@@ -40,6 +40,7 @@ class Node {
     };
     acceptor->async_accept(callback);
   }
+  bool listening = false;
 
  public:
   Node() : rol(connection::client) {}
@@ -64,6 +65,7 @@ class Node {
   void stop() {
     context.stop();
     if (threadContext.joinable()) threadContext.join();
+    listening = false;
   }
   bool listen(uint16_t port) {
     rol = connection::worker;
@@ -74,9 +76,10 @@ class Node {
 
       threadContext = std::thread([this]() { context.run(); });
     } catch (std::exception& e) {
-      return false;
+      listening = false;
     }
-    return true;
+    listening = true;
+    return listening;
   }
   bool connect(const std::string& host, const uint16_t port) {
     try {
@@ -108,6 +111,7 @@ class Node {
       nMessageCount++;
     }
   }
+  bool isListening() { return listening; }
 
  protected:
   virtual bool OnClientConnect(std::shared_ptr<connection> client) {
