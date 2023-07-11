@@ -179,10 +179,10 @@ errorCode printTransaction(int argc, const svec& argv) {
   std::cout << lastTransaction << std::endl;
   return good;
 }
-errorCode serverListen(int argc, const svec& arg) {
+errorCode serverListen(int argc, const svec& argv) {
   errorCode err = verifySize(argc, 2);
   if (err != good) return err;
-  bcnode.listen((uint16_t)std::stoi(arg[1]));
+  bcnode.listen((uint16_t)std::stoi(argv[1]));
   listeningThread = std::thread([]() {
     while (Interpreter::bcnode.isListening()) {
       Interpreter::bcnode.update(1, false);
@@ -190,12 +190,13 @@ errorCode serverListen(int argc, const svec& arg) {
   });
   return good;
 }
-errorCode clientConnect(int argc, const svec& arg) {
-  errorCode err = verifySize(argc, 2);
+errorCode clientConnect(int argc, const svec& argv) {
+  errorCode err = verifySize(argc, 3);
   if (err != good) return err;
+  bcnode.connect(argv[1], (uint16_t)std::stoi(argv[2]));
   return good;
 }
-errorCode sendTransaction(int argc, const svec& arg) {
+errorCode sendTransaction(int argc, const svec& argv) {
   errorCode err = verifySize(argc, 1);
   if (err != good) return err;
   return good;
