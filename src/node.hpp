@@ -44,7 +44,10 @@ class Node {
 
  public:
   Node() : rol(connection::client) {}
-  ~Node() { stop(); }
+  ~Node() {
+    stop();
+    connections.clear();
+  }
   void broadcast(const message::type& msg, rol_t to = connection::worker) {
     bool bInvalidClientExists = false;
     for (auto& conn : connections) {
