@@ -3,6 +3,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -199,6 +200,12 @@ errorCode clientConnect(int argc, const svec& argv) {
 errorCode sendTransaction(int argc, const svec& argv) {
   errorCode err = verifySize(argc, 1);
   if (err != good) return err;
+
+  std::stringstream ss;
+  Transaction::write(ss, lastTransaction);
+  message::type msg =
+      message::make(message::check_and_add_transaction, ss.str());
+  bcnode.broadcast(msg);
   return good;
 }
 }  // namespace Interpreter

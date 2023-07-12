@@ -5,11 +5,13 @@
 
 class Blockchain : public Node {
  public:
-  typedef void (*netcmd)(message::type&);
+  typedef void (*netcmd)(std::shared_ptr<connection>, message::type&);
   typedef std::unordered_map<message::category, netcmd> cmdlist_t;
 
  private:
-  static void donothing(message::type&) {}
+  static void donothing(std::shared_ptr<connection> conn, message::type& msg) {
+    std::cout << message::str[msg.head.cat] << std::endl;
+  }
 
   const cmdlist_t cmdlist{
       {message::set_rol_as_worker, donothing},
@@ -29,5 +31,11 @@ class Blockchain : public Node {
   }
   virtual void OnClientDisconnect(std::shared_ptr<connection> client) {}
   virtual void OnMessage(std::shared_ptr<connection> client,
-                         message::type& msg) {}
+                         message::type& msg) {
+    auto cit = cmdlist.find(msg.head.cat);
+
+    if (cit != cmdlist.end()) {
+      return cit->second(client, msg);
+    }
+  }
 };

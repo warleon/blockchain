@@ -11,8 +11,6 @@ class connection : public std::enable_shared_from_this<connection> {
   typedef tsqueue<message::type> tsq_t;
   typedef tsqueue<message::owned_t> tsqo_t;
 
-  enum owner_t { worker, client };
-
  private:
   asio::io_context& context;
   asio::ip::tcp::socket socket;
@@ -20,7 +18,6 @@ class connection : public std::enable_shared_from_this<connection> {
   tsq_t tsqout;
   message::type tempmsgin;
   uint32_t id = 0;
-  owner_t ownedby;
 
   void writeBody() {
     auto callback = [this](std::error_code ec, std::size_t length) {
@@ -60,10 +57,7 @@ class connection : public std::enable_shared_from_this<connection> {
         callback);
   }
   void addTemp() {
-    if (ownedby == worker)
-      tsqin.push_back({this->shared_from_this(), tempmsgin});
-    else
-      tsqin.push_back({nullptr, tempmsgin});
+    tsqin.push_back({this->shared_from_this(), tempmsgin});
     readHeader();
   }
   void readBody() {
@@ -129,7 +123,4 @@ class connection : public std::enable_shared_from_this<connection> {
       }
     });
   }
-
-  owner_t owner() { return ownedby; }
-  void owner(owner_t o) { ownedby = o; }
 };

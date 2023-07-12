@@ -1,4 +1,5 @@
 #include <string>
+
 class connection;
 namespace message {
 enum category {
@@ -9,6 +10,11 @@ enum category {
   block_to_be_mine,
   hash_of_mined_block,
 };
+std::string str[]{
+    "set_rol_as_worker", "set_rol_as_client", "check_and_add_transaction",
+    "ask_for_block",     "block_to_be_mine",  "hash_of_mined_block",
+};
+
 typedef unsigned long int size_t;
 typedef struct {
   category cat;

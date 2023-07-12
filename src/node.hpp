@@ -13,18 +13,17 @@ class Node {
  public:
   typedef connection::tsqo_t tsq_t;
   typedef asio::ip::tcp::acceptor listener_t;
-  typedef connection::owner_t rol_t;
+  enum rol_t { worker, client };
 
  private:
   tsq_t tsqin;
-  std::deque<std::shared_ptr<connection>> connections;
+  std::deque<std::shared_ptr<connection>> clients, workers;
 
   asio::io_context context;
   std::thread threadContext;
 
   std::unique_ptr<listener_t> acceptor = nullptr;
   uint32_t idCounter = 10000;
-  rol_t rol = connection::client;
 
   void waitForConection() {
     auto callback = [this](std::error_code ec, asio::ip::tcp::socket socket) {
@@ -32,8 +31,8 @@ class Node {
         std::shared_ptr<connection> newconn =
             std::make_shared<connection>(context, std::move(socket), tsqin);
         if (OnClientConnect(newconn)) {
-          connections.push_back(std::move(newconn));
-          connections.back()->listen(idCounter++);
+          clients.push_back(std::move(newconn));
+          clients.back()->listen(idCounter++);
         }
       }
       waitForConection();
@@ -43,27 +42,29 @@ class Node {
   bool listening = false;
 
  public:
-  Node() : rol(connection::client) {}
+  Node() {}
   ~Node() {
     stop();
-    connections.clear();
+    clients.clear();
+    workers.clear();
   }
-  void broadcast(const message::type& msg, rol_t to = connection::worker) {
-    bool bInvalidClientExists = false;
-    for (auto& conn : connections) {
-      if (conn && conn->IsConnected() && conn->owner() == to) {
+  void broadcast(const message::type& msg, rol_t to = worker) {
+    bool valid = false;
+    auto& conns = (to == worker) ? workers : clients;
+    for (auto& conn : conns) {
+      if (conn && conn->IsConnected()) {
         conn->send(msg);
       } else {
         OnClientDisconnect(conn);
         conn.reset();
 
-        bInvalidClientExists = true;
+        valid = true;
       }
     }
-    if (bInvalidClientExists)
-      connections.erase(
-          std::remove(connections.begin(), connections.end(), nullptr),
-          connections.end());
+
+    if (valid)
+      conns.erase(std::remove(conns.begin(), conns.end(), nullptr),
+                  conns.end());
   }
   void stop() {
     context.stop();
@@ -71,7 +72,6 @@ class Node {
     listening = false;
   }
   bool listen(uint16_t port) {
-    rol = connection::worker;
     acceptor = std::make_unique<listener_t>(
         context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port));
     try {
@@ -94,9 +94,8 @@ class Node {
           context, asio::ip::tcp::socket(context), tsqin);
 
       conn->connect(endpoints);
-      conn->owner(rol);
 
-      connections.push_back(std::move(conn));
+      workers.push_back(std::move(conn));
     } catch (std::exception& e) {
       return false;
     }

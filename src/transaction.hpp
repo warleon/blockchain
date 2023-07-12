@@ -54,7 +54,7 @@ errorCode setId(type& trans) {
   return good;
 }
 
-void write(std::ofstream& ofs, const type& transaction) {
+void write(std::ostream& ofs, const type& transaction) {
   ofs.write((char*)&transaction.type, sizeof(category));
   ofs.write((char*)&transaction.hash, Hash::hashSize);
   int pubkeysize = transaction.publickey.size();
@@ -65,7 +65,7 @@ void write(std::ofstream& ofs, const type& transaction) {
   ofs.write(transaction.signature.c_str(), signsize);
   ofs.write((char*)&transaction.id, Hash::hashSize);
 }
-void read(std::ifstream& ifs, type& transaction) {
+void read(std::istream& ifs, type& transaction) {
   ifs.read((char*)&transaction.type, sizeof(category));
   ifs.read((char*)&transaction.hash, Hash::hashSize);
   int pubkeysize = 0;
