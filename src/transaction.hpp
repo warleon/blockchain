@@ -54,6 +54,21 @@ errorCode setId(type& trans) {
   return good;
 }
 
+bool verify(type& tran) {
+  Keygen::Key pubkey;
+  errorCode ec = pubkey.readSerializedPublicKey(tran.publickey);
+  if (ec != good) return false;
+  Hash::type transactionHash;
+  std::string buffer((char*)&tran,
+                     (char*)&tran + sizeof(category) + sizeof(Hash::type));
+  buffer += tran.publickey;
+  Hash::bytes(buffer.c_str(), buffer.size(), transactionHash);
+  int result = RSA_verify(NID_sha256, transactionHash, Hash::hashSize,
+                          (unsigned char*)tran.signature.c_str(),
+                          tran.signature.size(), pubkey.getKeys());
+  return result == 1;
+}
+
 void write(std::ostream& os, const type& transaction) {
   os.write((char*)&transaction.id, Hash::hashSize);
   os.write((char*)&transaction.type, sizeof(category));

@@ -1,18 +1,20 @@
+#include <fstream>
 #include <iostream>
 #include <unordered_map>
 
+#include "block.hpp"
 #include "node.hpp"
+#include "tsqueue.hpp"
 
 class Blockchain : public Node {
+  std::fstream localChainFile;
+  tsqueue<Block> blocks;
+
  public:
   typedef void (*netcmd)(std::shared_ptr<connection>, message::type&);
   typedef std::unordered_map<message::category, netcmd> cmdlist_t;
 
  private:
-  static void donothing(std::shared_ptr<connection> conn, message::type& msg) {
-    std::cout << message::str[msg.head.cat] << std::endl;
-  }
-
   const cmdlist_t cmdlist{
       {message::set_rol_as_worker, donothing},
       {message::set_rol_as_client, donothing},
@@ -37,5 +39,10 @@ class Blockchain : public Node {
     if (cit != cmdlist.end()) {
       return cit->second(client, msg);
     }
+  }
+
+ private:
+  static void donothing(std::shared_ptr<connection> conn, message::type& msg) {
+    std::cout << message::str[msg.head.cat] << std::endl;
   }
 };
