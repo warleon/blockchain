@@ -10,6 +10,7 @@ namespace Hash {
 
 const int hashSize = SHA256_DIGEST_LENGTH;
 typedef unsigned char type[hashSize];
+const type null{};
 
 errorCode file(const std::string& filename, type& hash) {
   SHA256_CTX sha256Context;

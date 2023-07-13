@@ -54,31 +54,31 @@ errorCode setId(type& trans) {
   return good;
 }
 
-void write(std::ostream& ofs, const type& transaction) {
-  ofs.write((char*)&transaction.type, sizeof(category));
-  ofs.write((char*)&transaction.hash, Hash::hashSize);
+void write(std::ostream& os, const type& transaction) {
+  os.write((char*)&transaction.id, Hash::hashSize);
+  os.write((char*)&transaction.type, sizeof(category));
+  os.write((char*)&transaction.hash, Hash::hashSize);
   int pubkeysize = transaction.publickey.size();
-  ofs.write((char*)&pubkeysize, sizeof(int));
-  ofs.write(transaction.publickey.c_str(), pubkeysize);
+  os.write((char*)&pubkeysize, sizeof(int));
+  os.write(transaction.publickey.c_str(), pubkeysize);
   int signsize = transaction.signature.size();
-  ofs.write((char*)&signsize, sizeof(int));
-  ofs.write(transaction.signature.c_str(), signsize);
-  ofs.write((char*)&transaction.id, Hash::hashSize);
+  os.write((char*)&signsize, sizeof(int));
+  os.write(transaction.signature.c_str(), signsize);
 }
-void read(std::istream& ifs, type& transaction) {
-  ifs.read((char*)&transaction.type, sizeof(category));
-  ifs.read((char*)&transaction.hash, Hash::hashSize);
+void read(std::istream& is, type& transaction) {
+  is.read((char*)&transaction.id, Hash::hashSize);
+  is.read((char*)&transaction.type, sizeof(category));
+  is.read((char*)&transaction.hash, Hash::hashSize);
   int pubkeysize = 0;
-  ifs.read((char*)&pubkeysize, sizeof(int));
+  is.read((char*)&pubkeysize, sizeof(int));
   char* pubkeybuff = new char[pubkeysize];
-  ifs.read(pubkeybuff, pubkeysize);
+  is.read(pubkeybuff, pubkeysize);
   transaction.publickey = std::string(pubkeybuff, pubkeybuff + pubkeysize);
   int signsize = 0;
-  ifs.read((char*)&signsize, sizeof(int));
+  is.read((char*)&signsize, sizeof(int));
   char* signbuff = new char[signsize];
-  ifs.read(signbuff, signsize);
+  is.read(signbuff, signsize);
   transaction.signature = std::string(signbuff, signbuff + signsize);
-  ifs.read((char*)&transaction.id, Hash::hashSize);
 
   delete[] pubkeybuff;
   delete[] signbuff;
