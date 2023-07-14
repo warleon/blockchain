@@ -20,8 +20,7 @@ class Block {
   size_t pow_goal;
   Hash::type previous_hash;
   nonce_t nonce = 0;
-  size_t t_count = 0;
-  Transaction::type transactions[t_max]{};
+  std::vector<Transaction::type> transactions;
 
  public:
   Block(const Hash::type& previous_hash_) {
@@ -41,8 +40,8 @@ class Block {
   void update_pow_goal(size_t pow_goal_) { pow_goal = pow_goal_; }
 
   bool add_transaction(const Transaction::type& transaction) {
-    if (t_count >= t_max) return false;
-    transactions[t_count++] = transaction;
+    if (transactions.size() >= t_max) return false;
+    transactions.push_back(transaction);
     return true;
   }
 
@@ -64,6 +63,15 @@ class Block {
       if (self_hash[i] != 0) return false;
     }
     return true;
+  }
+
+  void reset() {
+    for (int i = 0; i < Hash::hashSize; i++) this->self_hash[i] = Hash::null[i];
+    for (int i = 0; i < Hash::hashSize; i++)
+      this->previous_hash[i] = Hash::null[i];
+    pow_goal = 0;
+    nonce = 0;
+    transactions.clear();
   }
   void write(std::ostream& os) {
     os.write((char*)self_hash, sizeof(Hash::type));

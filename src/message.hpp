@@ -3,16 +3,32 @@
 class connection;
 namespace message {
 enum category {
+  // requests
   set_rol_as_worker,
   set_rol_as_client,
   check_and_add_transaction,
   ask_for_block,
   block_to_be_mine,
   hash_of_mined_block,
+  // responses
+  transaction_accepted,
+  transaction_rejected,
+  rol_changed_to_worker,
+  rol_changed_to_client,
 };
 std::string str[]{
-    "set_rol_as_worker", "set_rol_as_client", "check_and_add_transaction",
-    "ask_for_block",     "block_to_be_mine",  "hash_of_mined_block",
+    // requests
+    "set_rol_as_worker",
+    "set_rol_as_client",
+    "check_and_add_transaction",
+    "ask_for_block",
+    "block_to_be_mine",
+    "hash_of_mined_block",
+    // responses
+    "transaction_accepted",
+    "transaction_rejected",
+    "rol_changed_to_worker",
+    "rol_changed_to_client",
 };
 
 typedef unsigned long int size_t;
