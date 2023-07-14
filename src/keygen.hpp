@@ -80,7 +80,7 @@ class Key {
     BIO_free(bio);
     return good;
   }
-  errorCode readSerializedPublicKey(std::string& serializedKey) {
+  errorCode readSerializedPublicKey(const std::string& serializedKey) {
     BIO* bio = BIO_new(BIO_s_mem());
     BIO_write(bio, serializedKey.data(), (int)serializedKey.size());
     PEM_read_bio_RSAPublicKey(bio, &rsa, nullptr, nullptr);

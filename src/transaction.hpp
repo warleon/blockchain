@@ -54,7 +54,7 @@ errorCode setId(type& trans) {
   return good;
 }
 
-bool verify(type& tran) {
+bool verify(const type& tran) {
   Keygen::Key pubkey;
   errorCode ec = pubkey.readSerializedPublicKey(tran.publickey);
   if (ec != good) return false;

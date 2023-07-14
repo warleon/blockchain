@@ -39,8 +39,10 @@ class Blockchain : public Node {
       case message::ask_for_block:
         return donothing(client, msg);
       case message::block_to_be_mine:
-        return donothing(client, msg);
+        return addBlockToMine(client, msg);
       case message::hash_of_mined_block:
+        return donothing(client, msg);
+      case message::end_connection:
         return donothing(client, msg);
 
       default:
@@ -64,7 +66,11 @@ class Blockchain : public Node {
     conn->send(message::make(message::transaction_accepted, ""));
     std::scoped_lock sl(muBlock);
     if (tempBlock.add_transaction(tran)) return;
+    std::stringstream ss2;
+    tempBlock.write(ss2);
+    this->broadcast(message::make(message::block_to_be_mine, ss2.str()));
     blocks.push_back(tempBlock);
+    std::cout << message::str[message::block_to_be_mine] << std::endl;
     tempBlock.reset();
     tempBlock.update_pow_goal(currPOW);
     tempBlock.update_previous_hash(lastAddedBlockHash);
@@ -88,5 +94,23 @@ class Blockchain : public Node {
     }
     conn->send(message::make(message::failed_to_change_rol, ""));
     return;
+  }
+  void addBlockToMine(std::shared_ptr<connection> conn, message::type& msg) {
+    std::stringstream ss(msg.body);
+    Block tblock;
+    tblock.read(ss);
+    // should verify but since every transaction is verified before being added
+    // the process becomes redundand
+    //  const auto& transactions = tblock.getTransactions();
+    //  for (const auto& tran : transactions) {
+    //    if (!Transaction::verify(tran)) {
+    //      return;
+    //    }
+    //  }
+    blocks.push_back(tblock);
+    conn->send(message::make(message::block_accepted, ""));
+  }
+  void endConnection(std::shared_ptr<connection> conn, message::type& msg) {
+    conn->disconnect();
   }
 };

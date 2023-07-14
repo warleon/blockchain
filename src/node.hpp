@@ -71,7 +71,7 @@ class Node {
     bool valid = false;
     auto& conns = (to == worker) ? workers : clients;
     for (auto& conn : conns) {
-      if (conn && conn->IsConnected()) {
+      if (conn && conn->isConnected()) {
         conn->send(msg);
       } else {
         OnClientDisconnect(conn);

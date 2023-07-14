@@ -10,6 +10,7 @@ enum category {
   ask_for_block,
   block_to_be_mine,
   hash_of_mined_block,
+  end_connection,
   // responses
   transaction_accepted,
   transaction_rejected,
@@ -18,6 +19,7 @@ enum category {
   wrong_message_body,
   failed_to_change_rol,
   connection_success,
+  block_accepted,
 };
 std::string str[]{
     // requests
@@ -27,6 +29,7 @@ std::string str[]{
     "ask_for_block",
     "block_to_be_mine",
     "hash_of_mined_block",
+    "end_connection",
     // responses
     "transaction_accepted",
     "transaction_rejected",
@@ -35,6 +38,7 @@ std::string str[]{
     "wrong_message_body",
     "failed_to_change_rol",
     "connection_success",
+    "block_accepted",
 };
 
 typedef unsigned long int size_t;

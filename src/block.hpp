@@ -87,4 +87,8 @@ class Block {
     is.read((char*)&nonce, sizeof(nonce));
     for (int i = 0; i < t_max; i++) Transaction::read(is, transactions[i]);
   }
+
+  const std::vector<Transaction::type>& getTransactions() {
+    return transactions;
+  }
 };

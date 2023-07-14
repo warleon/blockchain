@@ -112,9 +112,9 @@ class connection : public std::enable_shared_from_this<connection> {
           }
         });
   }
-  bool IsConnected() const { return socket.is_open(); }
-  void Disconnect() {
-    if (IsConnected()) asio::post(context, [this]() { socket.close(); });
+  bool isConnected() const { return socket.is_open(); }
+  void disconnect() {
+    if (isConnected()) asio::post(context, [this]() { socket.close(); });
   }
   void send(const message::type& msg) {
     asio::post(context, [this, msg]() {
