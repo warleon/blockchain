@@ -21,6 +21,7 @@ enum errorCode {
   cantSign = 400,
 
   cantOpenFile = 500,
+  cantConnect,
 };
 
 const std::unordered_map<errorCode, std::string> what{
@@ -40,4 +41,5 @@ const std::unordered_map<errorCode, std::string> what{
     {noFile, "The suplied file does not exists"},
     {cantSign, "Can't sign"},
     {cantOpenFile, "Can't open file"},
+    {cantConnect, "Can't connect"},
 };

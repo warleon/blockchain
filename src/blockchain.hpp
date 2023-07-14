@@ -20,9 +20,13 @@ class Blockchain : public Node {
 
  protected:
   virtual bool OnClientConnect(std::shared_ptr<connection> client) {
+    std::cout << "recieved new connection" << std::endl;
+    client->send(message::make(message::connection_success, ""));
     return true;
   }
-  virtual void OnClientDisconnect(std::shared_ptr<connection> client) {}
+  virtual void OnClientDisconnect(std::shared_ptr<connection> client) {
+    std::cout << "a connection have been closed" << std::endl;
+  }
   virtual void OnMessage(std::shared_ptr<connection> client,
                          message::type& msg) {
     switch (msg.head.cat) {

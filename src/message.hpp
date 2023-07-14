@@ -17,6 +17,7 @@ enum category {
   rol_changed_to_client,
   wrong_message_body,
   failed_to_change_rol,
+  connection_success,
 };
 std::string str[]{
     // requests
@@ -33,6 +34,7 @@ std::string str[]{
     "rol_changed_to_client",
     "wrong_message_body",
     "failed_to_change_rol",
+    "connection_success",
 };
 
 typedef unsigned long int size_t;

@@ -48,6 +48,10 @@ class Node {
     clients.clear();
     workers.clear();
   }
+  void start() {
+    if (!threadContext.joinable())
+      threadContext = std::thread([this]() { context.run(); });
+  }
   bool moveConn(uint32_t id, rol_t to) {
     auto& fromConns = (to == worker) ? clients : workers;
     auto& toConns = (to == worker) ? workers : clients;
@@ -91,8 +95,8 @@ class Node {
         context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port));
     try {
       waitForConection();
+      start();
 
-      threadContext = std::thread([this]() { context.run(); });
     } catch (std::exception& e) {
       listening = false;
     }
@@ -111,6 +115,7 @@ class Node {
       conn->connect(endpoints, idCounter++);
 
       workers.push_back(std::move(conn));
+      start();
     } catch (std::exception& e) {
       return false;
     }

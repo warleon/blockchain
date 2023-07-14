@@ -184,17 +184,14 @@ errorCode serverListen(int argc, const svec& argv) {
   errorCode err = verifySize(argc, 2);
   if (err != good) return err;
   bcnode.listen((uint16_t)std::stoi(argv[1]));
-  listeningThread = std::thread([]() {
-    while (Interpreter::bcnode.isListening()) {
-      Interpreter::bcnode.update(1, false);
-    }
-  });
+  listeningThread;
   return good;
 }
 errorCode clientConnect(int argc, const svec& argv) {
   errorCode err = verifySize(argc, 3);
   if (err != good) return err;
-  bcnode.connect(argv[1], (uint16_t)std::stoi(argv[2]));
+  bool connected = bcnode.connect(argv[1], (uint16_t)std::stoi(argv[2]));
+  if (!connected) return cantConnect;
   if (bcnode.isListening()) {
     bcnode.broadcast(message::make(message::set_rol_as_worker, ""));
   }
