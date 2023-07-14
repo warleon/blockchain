@@ -23,7 +23,7 @@ class Node {
   std::thread threadContext;
 
   std::unique_ptr<listener_t> acceptor = nullptr;
-  uint32_t idCounter = 10000;
+  uint32_t idCounter = 0;
 
   void waitForConection() {
     auto callback = [this](std::error_code ec, asio::ip::tcp::socket socket) {
@@ -47,6 +47,21 @@ class Node {
     stop();
     clients.clear();
     workers.clear();
+  }
+  bool moveConn(uint32_t id, rol_t to) {
+    auto& fromConns = (to == worker) ? clients : workers;
+    auto& toConns = (to == worker) ? workers : clients;
+
+    auto it = std::remove_if(fromConns.begin(), fromConns.end(),
+                             [id](std::shared_ptr<connection> connPtr) {
+                               return connPtr->getId() == id;
+                             });
+    auto dist = std::distance(it, fromConns.end());
+    if (dist != 1) return false;
+    toConns.push_back(*it);
+    fromConns.erase(it, fromConns.end());
+
+    return true;
   }
   void broadcast(const message::type& msg, rol_t to = worker) {
     bool valid = false;
@@ -93,7 +108,7 @@ class Node {
       auto conn = std::make_shared<connection>(
           context, asio::ip::tcp::socket(context), tsqin);
 
-      conn->connect(endpoints);
+      conn->connect(endpoints, idCounter++);
 
       workers.push_back(std::move(conn));
     } catch (std::exception& e) {

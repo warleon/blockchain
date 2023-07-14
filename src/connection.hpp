@@ -101,7 +101,9 @@ class connection : public std::enable_shared_from_this<connection> {
       readHeader();
     }
   }
-  void connect(const asio::ip::tcp::resolver::results_type& endpoints) {
+  void connect(const asio::ip::tcp::resolver::results_type& endpoints,
+               uint32_t uid = 0) {
+    id = uid;
     asio::async_connect(
         socket, endpoints,
         [this](std::error_code ec, asio::ip::tcp::endpoint endpoint) {
@@ -123,4 +125,5 @@ class connection : public std::enable_shared_from_this<connection> {
       }
     });
   }
+  uint32_t getId() { return id; }
 };
