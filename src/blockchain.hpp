@@ -4,11 +4,14 @@
 #include <unordered_map>
 
 #include "block.hpp"
+#include "database.hpp"
 #include "node.hpp"
 #include "tsqueue.hpp"
 
 class Blockchain : public Node {
+  std::string localChainName;
   std::fstream localChainFile;
+  std::unique_ptr<Database> db = std::make_unique<Database>(localChainFile);
   tsqueue<Block> blocks;
   std::thread miner;
   Block tempBlock;
@@ -18,7 +21,10 @@ class Blockchain : public Node {
 
  public:
   Blockchain(int pow = 0, std::string fn = "localChain.bc")
-      : Node(), currPOW(pow) {}
+      : Node(),
+        currPOW(pow),
+        localChainName(fn),
+        localChainFile(fn, std::ios_base::binary) {}
 
  protected:
   virtual void OnStartListening() {
@@ -34,7 +40,12 @@ class Blockchain : public Node {
         auto id = cb.getId();
         ss.write(id.c_str(), id.size());
         broadcast(message::make(message::hash_of_mined_block, ss.str()));
+        std::stringstream ss2;
+        cb.write(ss2);
+        std::string blockData = ss2.str();
+        db->append(blockData.c_str(), blockData.size());
       }
+      std::terminate();
     });
   }
   virtual bool OnClientConnect(std::shared_ptr<connection> client) {
