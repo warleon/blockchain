@@ -10,6 +10,7 @@
 class Blockchain : public Node {
   std::fstream localChainFile;
   tsqueue<Block> blocks;
+  std::thread miner;
   Block tempBlock;
   std::mutex muBlock;
   int currPOW;
@@ -19,6 +20,22 @@ class Blockchain : public Node {
   Blockchain(int pow = 0) : Node(), currPOW(pow) {}
 
  protected:
+  virtual void OnStartListening() {
+    miner = std::thread([this]() {
+      while (isListening()) {
+        blocks.wait();
+        auto cb = blocks.pop_front();
+        std::stringstream ss;
+        auto defid = cb.getDefaultId();
+        ss.write(defid.c_str(), defid.size());
+        while (!cb.try_mine())
+          ;
+        auto id = cb.getId();
+        ss.write(id.c_str(), id.size());
+        broadcast(message::make(message::hash_of_mined_block, ss.str()));
+      }
+    });
+  }
   virtual bool OnClientConnect(std::shared_ptr<connection> client) {
     std::cout << "recieved new connection" << std::endl;
     client->send(message::make(message::connection_success, ""));

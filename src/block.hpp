@@ -46,7 +46,7 @@ class Block {
   }
 
   // applies  one iteration of the POW mining proccess returns true if the
-  // POW goal is achieved flase otherwise
+  // POW goal is achieved false otherwise
   bool try_mine() {
     // sets a random nonce
     srand((unsigned)time(NULL));
@@ -63,6 +63,22 @@ class Block {
       if (self_hash[i] != 0) return false;
     }
     return true;
+  }
+  std::string getId() {
+    return std::string(self_hash, self_hash + Hash::hashSize);
+  }
+  std::string getDefaultId() {
+    Hash::type def;
+    std::stringstream ss;
+    int nnonce = 0;
+    ss.write((char*)Hash::null, sizeof(Hash::type));
+    ss.write((char*)previous_hash, sizeof(Hash::type));
+    ss.write((char*)&pow_goal, sizeof(pow_goal));
+    ss.write((char*)&nnonce, sizeof(nonce));
+    for (const auto& tran : transactions) Transaction::write(ss, tran);
+    std::string buffer = ss.str();
+    SHA256((unsigned char*)buffer.c_str(), buffer.size(), def);
+    return std::string(def, def + Hash::hashSize);
   }
 
   void reset() {

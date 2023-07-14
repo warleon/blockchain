@@ -96,11 +96,12 @@ class Node {
     try {
       waitForConection();
       start();
-
+      listening = true;
     } catch (std::exception& e) {
       listening = false;
     }
-    listening = true;
+    if (listening) OnStartListening();
+
     return listening;
   }
   bool connect(const std::string& host, const uint16_t port) {
@@ -142,4 +143,5 @@ class Node {
   virtual void OnClientDisconnect(std::shared_ptr<connection> client) {}
   virtual void OnMessage(std::shared_ptr<connection> client,
                          message::type& msg) {}
+  virtual void OnStartListening() {}
 };
