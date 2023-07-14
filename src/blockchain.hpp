@@ -68,14 +68,7 @@ class Blockchain : public Node {
     tempBlock.add_transaction(tran);
   }
   void setRolWorker(std::shared_ptr<connection> conn, message::type& msg) {
-    uint32_t id;
-    if (msg.head.size != sizeof(id)) {
-      conn->send(message::make(message::wrong_message_body, ""));
-      return;
-    }
-    std::stringstream ss(msg.body);
-    ss.read((char*)&id, sizeof(id));
-    bool succes = this->moveConn(id, worker);
+    bool succes = this->moveConn(conn->getId(), worker);
     if (succes) {
       conn->send(message::make(message::rol_changed_to_worker, ""));
       return;
@@ -84,14 +77,7 @@ class Blockchain : public Node {
     return;
   }
   void setRolClient(std::shared_ptr<connection> conn, message::type& msg) {
-    uint32_t id;
-    if (msg.head.size != sizeof(id)) {
-      conn->send(message::make(message::wrong_message_body, ""));
-      return;
-    }
-    std::stringstream ss(msg.body);
-    ss.read((char*)&id, sizeof(id));
-    bool succes = this->moveConn(id, client);
+    bool succes = this->moveConn(conn->getId(), client);
     if (succes) {
       conn->send(message::make(message::rol_changed_to_client, ""));
       return;

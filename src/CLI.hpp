@@ -195,6 +195,9 @@ errorCode clientConnect(int argc, const svec& argv) {
   errorCode err = verifySize(argc, 3);
   if (err != good) return err;
   bcnode.connect(argv[1], (uint16_t)std::stoi(argv[2]));
+  if (bcnode.isListening()) {
+    bcnode.broadcast(message::make(message::set_rol_as_worker, ""));
+  }
   return good;
 }
 errorCode sendTransaction(int argc, const svec& argv) {
