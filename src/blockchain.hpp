@@ -17,7 +17,8 @@ class Blockchain : public Node {
   Hash::type lastAddedBlockHash{};
 
  public:
-  Blockchain(int pow = 0) : Node(), currPOW(pow) {}
+  Blockchain(int pow = 0, std::string fn = "localChain.bc")
+      : Node(), currPOW(pow) {}
 
  protected:
   virtual void OnStartListening() {
