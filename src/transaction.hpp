@@ -63,6 +63,7 @@ bool verify(const type& tran) {
                      (char*)&tran + sizeof(category) + sizeof(Hash::type));
   buffer += tran.publickey;
   Hash::bytes(buffer.c_str(), buffer.size(), transactionHash);
+  if (!pubkey.getKeys()) return false;
   int result = RSA_verify(NID_sha256, transactionHash, Hash::hashSize,
                           (unsigned char*)tran.signature.c_str(),
                           tran.signature.size(), pubkey.getKeys());
@@ -81,6 +82,7 @@ void write(std::ostream& os, const type& transaction) {
   os.write(transaction.signature.c_str(), signsize);
 }
 void read(std::istream& is, type& transaction) {
+  // std::cout << &transaction << std::endl;
   is.read((char*)&transaction.id, Hash::hashSize);
   is.read((char*)&transaction.type, sizeof(category));
   is.read((char*)&transaction.hash, Hash::hashSize);

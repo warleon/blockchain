@@ -17,8 +17,8 @@ class Block {
   // later to match a prefered block size
   static const size_t t_max = 1;
   Hash::type self_hash{};
-  size_t pow_goal;
-  Hash::type previous_hash;
+  size_t pow_goal = 0;
+  Hash::type previous_hash{};
   nonce_t nonce = 0;
   std::vector<Transaction::type> transactions;
 
@@ -33,7 +33,7 @@ class Block {
   Block() {}  // empty constructor ment o be use when loading block from disk
   ~Block() {}
   void setNonce(nonce_t n) { nonce = n; }
-  nonce_t getNonce(){return nonce;}
+  nonce_t getNonce() { return nonce; }
   void update_previous_hash(const Hash::type& previous_hash_) {
     for (int i = 0; i < Hash::hashSize; i++) {
       this->previous_hash[i] = previous_hash_[i];
@@ -96,14 +96,19 @@ class Block {
     os.write((char*)previous_hash, sizeof(Hash::type));
     os.write((char*)&pow_goal, sizeof(pow_goal));
     os.write((char*)&nonce, sizeof(nonce));
-    for (int i = 0; i < t_max; i++) Transaction::write(os, transactions[i]);
+    size_t tn = transactions.size();
+    os.write((char*)&tn, sizeof(tn));
+    for (int i = 0; i < tn; i++) Transaction::write(os, transactions[i]);
   }
   void read(std::istream& is) {
     is.read((char*)self_hash, sizeof(Hash::type));
     is.read((char*)previous_hash, sizeof(Hash::type));
     is.read((char*)&pow_goal, sizeof(pow_goal));
     is.read((char*)&nonce, sizeof(nonce));
-    for (int i = 0; i < t_max; i++) Transaction::read(is, transactions[i]);
+    size_t tn = 0;
+    is.read((char*)&tn, sizeof(tn));
+    transactions.resize(tn);
+    for (int i = 0; i < tn; i++) Transaction::read(is, transactions[i]);
   }
 
   const std::vector<Transaction::type>& getTransactions() {

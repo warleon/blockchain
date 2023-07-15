@@ -15,7 +15,7 @@ class Blockchain : public Node {
   std::deque<std::shared_ptr<Block>> blocks;
   std::mutex bMutex;
   std::thread miner;
-  std::shared_ptr<Block> tempBlock;
+  std::unique_ptr<Block> tempBlock = std::make_unique<Block>();
   std::mutex muBlock;
   int currPOW;
   Hash::type lastAddedBlockHash{};
@@ -97,16 +97,18 @@ class Blockchain : public Node {
 
     conn->send(message::make(message::transaction_accepted, ""));
     std::scoped_lock sl(muBlock);
+    // std::cout << tempBlock << std::endl;
     if (tempBlock->add_transaction(tran)) return;
     std::stringstream ss2;
     tempBlock->write(ss2);
     this->broadcast(message::make(message::block_to_be_mine, ss2.str()));
     {
       std::scoped_lock lock(bMutex);
-      blocks.push_back(tempBlock);
+      blocks.push_back(std::move(tempBlock));
     }
     std::cout << message::str[message::block_to_be_mine] << std::endl;
-    tempBlock->reset();
+    // tempBlock->reset();
+    tempBlock = std::make_unique<Block>();
     tempBlock->update_pow_goal(currPOW);
     tempBlock->update_previous_hash(lastAddedBlockHash);
 
