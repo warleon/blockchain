@@ -11,7 +11,7 @@
 class Blockchain : public Node {
   std::string localChainName;
   std::fstream localChainFile;
-  std::unique_ptr<Database> db = std::make_unique<Database>(localChainFile);
+  std::unique_ptr<Database> db;
   std::deque<std::shared_ptr<Block>> blocks;
   std::mutex bMutex;
   std::thread miner;
@@ -21,11 +21,15 @@ class Blockchain : public Node {
   Hash::type lastAddedBlockHash{};
 
  public:
-  Blockchain(int pow = 0, std::string fn = "localChain.bc")
-      : Node(),
-        currPOW(pow),
-        localChainName(fn),
-        localChainFile(fn, std::ios_base::binary) {}
+  Blockchain(int pow = 5, std::string fn = "localChain.bc")
+      : Node(), currPOW(pow), localChainName(fn) {
+    localChainFile.open(
+        fn, std::ios::binary | std::ios::out | std::ios::in | std::ios::app);
+    if (!localChainFile)
+      localChainFile.open(fn, std::ios_base::binary | std::ios::out |
+                                  std::ios::in | std::ios::trunc);
+    db = std::make_unique<Database>(localChainFile);
+  }
 
  protected:
   virtual void OnStartListening() {
@@ -33,6 +37,8 @@ class Blockchain : public Node {
       while (isListening()) {
         std::scoped_lock lock(bMutex);
         if (blocks.empty()) continue;
+        std::cout << message::str[message::mining_block] << std::endl;
+        broadcast(message::make(message::mining_block, ""), client);
         auto cb = blocks.front();
         blocks.pop_front();
         std::stringstream ss;
@@ -47,6 +53,9 @@ class Blockchain : public Node {
         cb->write(ss2);
         std::string blockData = ss2.str();
         db->append(blockData.c_str(), blockData.size());
+        std::cout << message::str[message::block_added_to_the_chain]
+                  << std::endl;
+        broadcast(message::make(message::block_added_to_the_chain, ""), client);
       }
       std::terminate();
     });
@@ -73,9 +82,9 @@ class Blockchain : public Node {
       case message::block_to_be_mine:
         return addBlockToMine(client, msg);
       case message::hash_of_mined_block:
-        return donothing(client, msg);
+        return writeBlockToLocalFile(client, msg);
       case message::end_connection:
-        return donothing(client, msg);
+        return endConnection(client, msg);
 
       default:
         return donothing(client, msg);
@@ -88,7 +97,6 @@ class Blockchain : public Node {
   }
   void checkAddTransaction(std::shared_ptr<connection> conn,
                            message::type& msg) {
-    std::cout << message::str[msg.head.cat] << std::endl;
     std::stringstream ss(msg.body);
     Transaction::type tran;
     Transaction::read(ss, tran);
@@ -98,21 +106,23 @@ class Blockchain : public Node {
     conn->send(message::make(message::transaction_accepted, ""));
     std::scoped_lock sl(muBlock);
     // std::cout << tempBlock << std::endl;
-    if (tempBlock->add_transaction(tran)) return;
-    std::stringstream ss2;
-    tempBlock->write(ss2);
-    this->broadcast(message::make(message::block_to_be_mine, ss2.str()));
-    {
+    // if (tempBlock->add_transaction(tran)) return;
+    bool added = tempBlock->add_transaction(tran);
+    if (tempBlock->full()) {
+      // share block
+      std::stringstream ss2;
+      tempBlock->write(ss2);
+      this->broadcast(message::make(message::block_to_be_mine, ss2.str()));
+      // add block to the mine queue
       std::scoped_lock lock(bMutex);
       blocks.push_back(std::move(tempBlock));
+      // reset block
+      tempBlock = std::make_unique<Block>();
+      tempBlock->update_pow_goal(currPOW);
+      tempBlock->update_previous_hash(lastAddedBlockHash);
+      std::cout << message::str[message::block_to_be_mine] << std::endl;
     }
-    std::cout << message::str[message::block_to_be_mine] << std::endl;
-    // tempBlock->reset();
-    tempBlock = std::make_unique<Block>();
-    tempBlock->update_pow_goal(currPOW);
-    tempBlock->update_previous_hash(lastAddedBlockHash);
-
-    tempBlock->add_transaction(tran);
+    if (!added) tempBlock->add_transaction(tran);
   }
   void setRolWorker(std::shared_ptr<connection> conn, message::type& msg) {
     bool succes = this->moveConn(conn->getId(), worker);
@@ -148,7 +158,7 @@ class Blockchain : public Node {
       std::scoped_lock lock(bMutex);
       blocks.push_back(tblock);
     }
-    conn->send(message::make(message::block_accepted, ""));
+    broadcast(message::make(message::block_accepted, ""), client);
   }
   void endConnection(std::shared_ptr<connection> conn, message::type& msg) {
     conn->disconnect();
@@ -169,15 +179,18 @@ class Blockchain : public Node {
                              });
     auto dist = std::distance(it, blocks.end());
     if (dist != 1) {
+      conn->send(message::make(message::block_not_found, ""));
       return;
     }
     (*it)->setNonce(nnonce);
     if (!(*it)->try_mine()) {
+      conn->send(message::make(message::nonce_is_incorrect, ""));
       return;
     }
     std::stringstream sblock;
     (*it)->write(sblock);
     std::string buff = sblock.str();
     db->append(buff.c_str(), buff.size());
+    broadcast(message::make(message::block_added_to_the_chain, ""), client);
   }
 };

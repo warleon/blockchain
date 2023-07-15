@@ -41,8 +41,9 @@ class Block {
   }
   void update_pow_goal(size_t pow_goal_) { pow_goal = pow_goal_; }
 
+  bool full() { return transactions.size() >= t_max; }
   bool add_transaction(const Transaction::type& transaction) {
-    if (transactions.size() >= t_max) return false;
+    if (full()) return false;
     transactions.push_back(transaction);
     return true;
   }

@@ -20,6 +20,10 @@ enum category {
   failed_to_change_rol,
   connection_success,
   block_accepted,
+  block_not_found,
+  nonce_is_incorrect,
+  block_added_to_the_chain,
+  mining_block,
 };
 std::string str[]{
     // requests
@@ -39,6 +43,10 @@ std::string str[]{
     "failed_to_change_rol",
     "connection_success",
     "block_accepted",
+    "block_not_found",
+    "nonce_is_incorrect",
+    "block_added_to_the_chain",
+    "mining_block",
 };
 
 typedef unsigned long int size_t;

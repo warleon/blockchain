@@ -1,5 +1,6 @@
 
 *.tr
+*.bc
 build
 server
 client
