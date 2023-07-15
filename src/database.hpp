@@ -23,7 +23,7 @@ class Database {
   }
 
   // sets g to the begining of the first appearance of the key in the file
-  void search(const std::string& key) {
+  bool search(const std::string& key) {
     lock_t lock(mutex);
     std::string value;
     fios.seekg(std::ios_base::beg);
@@ -42,6 +42,10 @@ class Database {
       if (count < n) pi[j] = count;
       if (count == n) break;
     }
-    if (count == n) fios.seekg(-n, std::ios_base::cur);
+    if (count == n) {
+      fios.seekg(-n, std::ios_base::cur);
+      return true;
+    }
+    return false;
   }
 };
