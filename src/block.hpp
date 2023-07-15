@@ -32,6 +32,8 @@ class Block {
   }
   Block() {}  // empty constructor ment o be use when loading block from disk
   ~Block() {}
+  void setNonce(nonce_t n) { nonce = n; }
+  nonce_t getNonce(){return nonce;}
   void update_previous_hash(const Hash::type& previous_hash_) {
     for (int i = 0; i < Hash::hashSize; i++) {
       this->previous_hash[i] = previous_hash_[i];
